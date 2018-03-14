@@ -54,12 +54,14 @@ var VIEW_POSITIONS = map[string]viewPosition{
 	},
 }
 
+var message string
+
 func main() {
 	bytes, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(err, string(bytes))
+	message = string(bytes)
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
 		log.Panicln(err)
