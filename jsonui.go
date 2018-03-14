@@ -64,6 +64,14 @@ func main() {
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding("projects", gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
+		return err
+
+	}
+	if err := g.SetKeybinding("projects", gocui.KeyArrowDown, gocui.ModNone, cursorDown); err != nil {
+		return err
+
+	}
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
@@ -112,6 +120,7 @@ func layout(g *gocui.Gui) error {
 	for _, view := range views {
 		x0, y0, x1, y1 := VIEW_POSITIONS[view].getCoordinates(maxX, maxY)
 		if v, err := g.SetView(view, x0, y0, x1, y1); err != nil {
+			v.Highlight = true
 			if err != gocui.ErrUnknownView {
 				return err
 
