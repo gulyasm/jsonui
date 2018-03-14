@@ -41,11 +41,11 @@ var VIEW_POSITIONS = map[string]viewPosition{
 	TREE_VIEW: {
 		position{0.0, 0},
 		position{0.0, 0},
-		position{0.3, 2},
+		position{0.2, 2},
 		position{1.0, 2},
 	},
 	TEXT_VIEW: {
-		position{0.3, 0},
+		position{0.2, 0},
 		position{0.0, 0},
 		position{1.0, 2},
 		position{1.0, 2},
@@ -74,6 +74,9 @@ func main() {
 		log.Panicln(err)
 
 	}
+
+	g.SelFgColor = gocui.ColorBlack
+	g.SelBgColor = gocui.ColorGreen
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
@@ -118,7 +121,7 @@ func (node *TreeNode) Draw(writer io.Writer, lvl, padding int) error {
 }
 
 func layout(g *gocui.Gui) error {
-	var views = []string{TREE_VIEW}
+	var views = []string{TREE_VIEW, TEXT_VIEW}
 	maxX, maxY := g.Size()
 	for _, view := range views {
 		x0, y0, x1, y1 := VIEW_POSITIONS[view].getCoordinates(maxX, maxY)
@@ -132,8 +135,12 @@ func layout(g *gocui.Gui) error {
 				return err
 
 			}
-			x, _ := v.Size()
-			mytree.Draw(v, 0, x)
+			if v.Name() == TREE_VIEW {
+				x, _ := v.Size()
+				mytree.Draw(v, 0, x)
+			}
+			if v.Name() == TEXT_VIEW {
+			}
 
 		}
 	}
@@ -141,18 +148,38 @@ func layout(g *gocui.Gui) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	g.SelFgColor = gocui.ColorBlack
-	g.SelBgColor = gocui.ColorGreen
 	return nil
 
 }
+func drawText(g *gocui.Gui, v *gocui.View) error {
+	textView, err := g.View(TEXT_VIEW)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tview, err := g.View(TREE_VIEW)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, y := tview.Cursor()
+	line, err := tview.Line(y)
+	if err != nil {
+		log.Fatal("failed to get line> " + strconv.Itoa(y))
+		log.Fatal(err)
+	}
+	textView.Clear()
+	fmt.Fprintf(textView, strconv.Itoa(y)+" | "+line)
+	return nil
+}
+
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
 	v.MoveCursor(0, 1, false)
+	drawText(g, v)
 	return nil
 }
 
 func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	v.MoveCursor(0, -1, false)
+	drawText(g, v)
 	return nil
 }
 
