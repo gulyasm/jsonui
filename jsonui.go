@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/jroimartin/gocui"
 )
 
 const (
-	TREE_VIEW = "view/tree"
-	TEXT_VIEW = "view/text"
+	TREE_VIEW = "tree"
+	TEXT_VIEW = "text"
 )
 
 type position struct {
@@ -64,12 +65,13 @@ func main() {
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding("projects", gocui.KeyArrowUp, gocui.ModNone, cursorUp); err != nil {
-		return err
+
+	if err := g.SetKeybinding(TREE_VIEW, 'k', gocui.ModNone, cursorUp); err != nil {
+		log.Panicln(err)
 
 	}
-	if err := g.SetKeybinding("projects", gocui.KeyArrowDown, gocui.ModNone, cursorDown); err != nil {
-		return err
+	if err := g.SetKeybinding(TREE_VIEW, 'j', gocui.ModNone, cursorDown); err != nil {
+		log.Panicln(err)
 
 	}
 
@@ -103,10 +105,11 @@ var mytree = TreeNode{
 	},
 }
 
-func (node *TreeNode) Draw(writer io.Writer, lvl int) error {
-	fmt.Fprintln(writer, strings.Repeat("  ", lvl)+" "+node.text)
+func (node *TreeNode) Draw(writer io.Writer, lvl, padding int) error {
+	str := fmt.Sprintf("%-"+strconv.Itoa(padding)+"s", strings.Repeat("  ", lvl)+" "+node.text)
+	fmt.Fprintln(writer, str)
 	for _, child := range node.children {
-		err := child.Draw(writer, lvl+1)
+		err := child.Draw(writer, lvl+1, padding)
 		if err != nil {
 			return err
 		}
@@ -115,21 +118,51 @@ func (node *TreeNode) Draw(writer io.Writer, lvl int) error {
 }
 
 func layout(g *gocui.Gui) error {
-	var views = []string{TREE_VIEW, TEXT_VIEW}
+	var views = []string{TREE_VIEW}
 	maxX, maxY := g.Size()
 	for _, view := range views {
 		x0, y0, x1, y1 := VIEW_POSITIONS[view].getCoordinates(maxX, maxY)
 		if v, err := g.SetView(view, x0, y0, x1, y1); err != nil {
+			v.SelFgColor = gocui.ColorBlack
+			v.SelBgColor = gocui.ColorGreen
 			v.Highlight = true
+
+			v.Title = " " + view + " "
 			if err != gocui.ErrUnknownView {
 				return err
 
 			}
-			mytree.Draw(v, 0)
+			x, _ := v.Size()
+			mytree.Draw(v, 0, x)
 
 		}
 	}
+	_, err := g.SetCurrentView(TREE_VIEW)
+	if err != nil {
+		log.Fatal(err)
+	}
+	g.SelFgColor = gocui.ColorBlack
+	g.SelBgColor = gocui.ColorGreen
 	return nil
+
+}
+func cursorDown(g *gocui.Gui, v *gocui.View) error {
+	v.MoveCursor(0, 1, false)
+	return nil
+}
+
+func cursorUp(g *gocui.Gui, v *gocui.View) error {
+	v.MoveCursor(0, -1, false)
+	return nil
+}
+
+func lineBelow(g *gocui.Gui, v *gocui.View) bool {
+	_, cy := v.Cursor()
+	if l, _ := v.Line(cy + 1); l != "" {
+		return true
+
+	}
+	return false
 
 }
 
