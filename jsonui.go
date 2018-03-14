@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -53,6 +55,11 @@ var VIEW_POSITIONS = map[string]viewPosition{
 }
 
 func main() {
+	bytes, err := ioutil.ReadAll(os.Stdin)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(err, string(bytes))
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
 		log.Panicln(err)
