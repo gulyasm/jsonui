@@ -137,7 +137,6 @@ func layout(g *gocui.Gui) error {
 		if v, err := g.SetView(view, x0, y0, x1, y1); err != nil {
 			v.SelFgColor = gocui.ColorBlack
 			v.SelBgColor = gocui.ColorGreen
-			v.Highlight = true
 
 			v.Title = " " + view + " "
 			if err != gocui.ErrUnknownView {
@@ -145,6 +144,7 @@ func layout(g *gocui.Gui) error {
 
 			}
 			if v.Name() == TREE_VIEW {
+				v.Highlight = true
 				x, _ := v.Size()
 				mytree.Draw(v, 0, x)
 			}
@@ -176,13 +176,22 @@ func drawText(g *gocui.Gui, v *gocui.View) error {
 		log.Fatal(err)
 	}
 	textView.Clear()
-	fmt.Fprintf(textView, strconv.Itoa(y)+" | "+line)
+	line = strings.TrimSpace(line)
+	fmt.Fprintf(textView, line)
 	return nil
 }
 
+func lineBelow(v *gocui.View) bool {
+	_, y := v.Cursor()
+	line, err := v.Line(y + 1)
+	return err == nil && line != ""
+}
+
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
-	v.MoveCursor(0, 1, false)
-	drawText(g, v)
+	if lineBelow(v) {
+		v.MoveCursor(0, 1, false)
+		drawText(g, v)
+	}
 	return nil
 }
 
@@ -190,16 +199,6 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 	v.MoveCursor(0, -1, false)
 	drawText(g, v)
 	return nil
-}
-
-func lineBelow(g *gocui.Gui, v *gocui.View) bool {
-	_, cy := v.Cursor()
-	if l, _ := v.Line(cy + 1); l != "" {
-		return true
-
-	}
-	return false
-
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {

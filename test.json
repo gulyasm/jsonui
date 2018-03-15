@@ -1,4 +1,10 @@
 {
     "name": "gulyasm",
-    "age": 12
+    "age": 12,
+    "complex": {
+        "complex_age": 12,
+        "complex_name": "juli",
+        "complex_list": ["alma"]
+
+    }
 }
