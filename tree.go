@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -52,13 +53,23 @@ type ComplexNode struct {
 }
 
 func (n ComplexNode) Find(tp TreePosition) TreeNode {
-	return nil
+	e, ok := n.data[tp[0]]
+	newTp := tp.Shift()
+	if !ok {
+		// This can't happen in theory
+		return nil
+	}
+	if newTp.Empty() {
+		return e
+	} else {
+		return e.Find(newTp)
+	}
 }
 
 func (n ComplexNode) stringChildren(padding, lvl int) string {
 	s := []string{}
 	for key, value := range n.data {
-		s = append(s, fmt.Sprintf("%s\"%s\": %s", strings.Repeat(" ", lvl*padding), key, value.String(padding, lvl+1)))
+		s = append(s, fmt.Sprintf("%s\"%s\": %s", strings.Repeat(" ", padding+lvl*padding), key, value.String(padding, lvl+1)))
 	}
 	result := strings.Join(s, ",\n")
 	return result
@@ -87,7 +98,16 @@ type ListNode struct {
 }
 
 func (n ListNode) Find(tp TreePosition) TreeNode {
-	return nil
+	i, err := strconv.Atoi(strings.TrimSuffix(strings.TrimPrefix(tp[0], "["), "]"))
+	if err != nil {
+		return nil
+	}
+	newTp := tp.Shift()
+	if newTp.Empty() {
+		return n.data[i]
+	} else {
+		return n.data[i].Find(newTp)
+	}
 }
 
 func (n ListNode) stringChildren(padding, lvl int) string {

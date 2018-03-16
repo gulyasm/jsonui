@@ -72,10 +72,10 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.SetKeybinding(TREE_VIEW, 'k', gocui.ModNone, cursorUp); err != nil {
+	if err := g.SetKeybinding(TREE_VIEW, 'k', gocui.ModNone, cursorMovement(-1)); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding(TREE_VIEW, 'j', gocui.ModNone, cursorDown); err != nil {
+	if err := g.SetKeybinding(TREE_VIEW, 'j', gocui.ModNone, cursorMovement(1)); err != nil {
 		log.Panicln(err)
 	}
 
@@ -124,9 +124,9 @@ func drawText(g *gocui.Gui, v *gocui.View) error {
 	return nil
 }
 
-func lineBelow(v *gocui.View) bool {
+func lineBelow(v *gocui.View, d int) bool {
 	_, y := v.Cursor()
-	line, err := v.Line(y + 1)
+	line, err := v.Line(y + d)
 	return err == nil && line != ""
 }
 
@@ -159,9 +159,6 @@ func FindTreePosition(v *gocui.View, dv io.Writer) TreePosition {
 
 	}
 
-	for _, p := range path {
-		fmt.Fprintln(dv, p)
-	}
 	return path
 }
 
@@ -174,22 +171,17 @@ func debugView(g *gocui.Gui) *gocui.View {
 	return textView
 }
 
-func cursorDown(g *gocui.Gui, v *gocui.View) error {
-	dv := debugView(g)
-	if lineBelow(v) {
-		v.MoveCursor(0, 1, false)
-		FindTreePosition(v, dv)
+func cursorMovement(d int) func(g *gocui.Gui, v *gocui.View) error {
+	return func(g *gocui.Gui, v *gocui.View) error {
+		dv := debugView(g)
+		if lineBelow(v, d) {
+			v.MoveCursor(0, d, false)
+			p := FindTreePosition(v, dv)
+			treeToDraw := tree.Find(p)
+			fmt.Fprintf(dv, treeToDraw.String(2, 0))
+		}
+		return nil
 	}
-	return nil
-}
-
-func cursorUp(g *gocui.Gui, v *gocui.View) error {
-	dv := debugView(g)
-	if lineBelow(v) {
-		v.MoveCursor(0, -1, false)
-		FindTreePosition(v, dv)
-	}
-	return nil
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
