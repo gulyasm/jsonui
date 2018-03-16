@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -104,6 +105,9 @@ type ListNode struct {
 }
 
 func (n ListNode) Find(tp TreePosition) TreeNode {
+	if tp.Empty() {
+		return &n
+	}
 	i, err := strconv.Atoi(strings.TrimSuffix(strings.TrimPrefix(tp[0], "["), "]"))
 	if err != nil {
 		return nil
@@ -130,6 +134,9 @@ func (n ListNode) String(padding, lvl int) string {
 }
 
 func (n ListNode) Draw(writer io.Writer, padding, lvl int) error {
+	if lvl == 0 {
+		fmt.Fprintf(writer, "%s\n", "root (list)")
+	}
 	for i, value := range n.data {
 		fmt.Fprintf(writer, "%s[%d]", strings.Repeat(" ", padding+lvl*padding), i)
 		value.Draw(writer, padding, lvl+1)
@@ -236,8 +243,11 @@ func NewTree(y interface{}) (TreeNode, error) {
 }
 
 func FromBytes(b []byte) (TreeNode, error) {
-	var y map[string]interface{}
-	json.Unmarshal(b, &y)
+	var y interface{}
+	err := json.Unmarshal(b, &y)
+	if err != nil {
+		log.Fatal("failed to marshal raw json: ", err)
+	}
 	return NewTree(y)
 }
 

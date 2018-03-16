@@ -2,6 +2,21 @@ package main
 
 import "testing"
 
+func TestListTree(t *testing.T) {
+	raw := []byte(`[1,234,35]`)
+	tree, err := FromBytes(raw)
+	if err != nil {
+		t.Fatalf("failed to convert JSON to tree")
+	}
+	v, ok := tree.(*ListNode)
+	if !ok {
+		t.Fatalf("root element should be a ListNode")
+	}
+	if len(v.data) != 3 {
+		t.Fatalf("root element should have 3 children")
+	}
+}
+
 func TestEmpty(t *testing.T) {
 	var tp TreePosition = []string{"alma", "barack", "banan"}
 	if tp.Empty() {
