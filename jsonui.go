@@ -156,10 +156,9 @@ func FindTreePosition(v *gocui.View, dv io.Writer) TreePosition {
 	for i := len(path)/2 - 1; i >= 0; i-- {
 		opp := len(path) - 1 - i
 		path[i], path[opp] = path[opp], path[i]
-
 	}
 
-	return path
+	return path[1:]
 }
 
 func debugView(g *gocui.Gui) *gocui.View {

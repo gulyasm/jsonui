@@ -53,6 +53,9 @@ type ComplexNode struct {
 }
 
 func (n ComplexNode) Find(tp TreePosition) TreeNode {
+	if tp.Empty() {
+		return &n
+	}
 	e, ok := n.data[tp[0]]
 	newTp := tp.Shift()
 	if !ok {
@@ -80,8 +83,11 @@ func (n ComplexNode) String(padding, lvl int) string {
 }
 
 func (n ComplexNode) Draw(writer io.Writer, padding, lvl int) error {
+	if lvl == 0 {
+		fmt.Fprintf(writer, "%s\n", "root")
+	}
 	for key, value := range n.data {
-		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", lvl*padding), key)
+		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), key)
 		value.Draw(writer, padding, lvl+1)
 	}
 	return nil
@@ -125,7 +131,7 @@ func (n ListNode) String(padding, lvl int) string {
 
 func (n ListNode) Draw(writer io.Writer, padding, lvl int) error {
 	for i, value := range n.data {
-		fmt.Fprintf(writer, "%s[%d]", strings.Repeat(" ", lvl*padding), i)
+		fmt.Fprintf(writer, "%s[%d]", strings.Repeat(" ", padding+lvl*padding), i)
 		value.Draw(writer, padding, lvl+1)
 		fmt.Fprintf(writer, "\n")
 	}
