@@ -50,7 +50,11 @@ func (n ComplexNode) String(padding, lvl int) string {
 	return fmt.Sprintf("{\n%s\n%s}", n.stringChildren(padding, lvl), strings.Repeat(" ", lvl*padding))
 }
 
-func (n ComplexNode) Draw(io.Writer, int, int) error {
+func (n ComplexNode) Draw(writer io.Writer, padding, lvl int) error {
+	for key, value := range n.data {
+		fmt.Fprintf("%s%s\n", strings.Repeat(" ", padding+lvl*padding), key)
+		value.Draw(writer, padding, lvl+1)
+	}
 	return nil
 
 }
@@ -91,11 +95,12 @@ type FloatNode struct {
 	data float64
 }
 
-func (n FloatNode) String(_, lvl int) string {
+func (n FloatNode) String(int, int) string {
 	return fmt.Sprintf("%g", n.data)
 }
 
-func (n FloatNode) Draw(io.Writer, int, int) error {
+func (n FloatNode) Draw(writer io.Writer, padding, lvl int) error {
+	fmt.Fprintln(writer, n.String(padding, lvl))
 	return nil
 
 }
@@ -113,13 +118,13 @@ func (n StringNode) String(_, _ int) string {
 	return fmt.Sprintf("%q", n.data)
 }
 
-func (n StringNode) Draw(io.Writer, int, int) error {
+func (n StringNode) Draw(writer io.Writer, padding, lvl int) error {
+	fmt.Fprintf(writer, n.String(padding, lvl))
 	return nil
 
 }
 func (n StringNode) Filter(query Query) bool {
 	return true
-
 }
 
 func NewTree(y interface{}) (TreeNode, error) {
@@ -233,6 +238,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	str := tree.String(2, 0)
-	fmt.Println(str)
+	tree.Draw(os.Stdout, 2, 0)
 }
