@@ -16,7 +16,7 @@ type Query struct {
 
 type TreeNode interface {
 	String(int, int) string
-	// Draw(io.Writer, int, int) error
+	Draw(io.Writer, int, int) error
 	Filter(query Query) bool
 }
 
@@ -40,7 +40,7 @@ type ComplexNode struct {
 func (n ComplexNode) stringChildren(padding, lvl int) string {
 	s := []string{}
 	for key, value := range n.data {
-		s = append(s, fmt.Sprintf("%s\"%s\": %s", strings.Repeat(" ", padding+lvl*padding), key, value.String(padding, lvl+1)))
+		s = append(s, fmt.Sprintf("%s\"%s\": %s", strings.Repeat(" ", lvl*padding), key, value.String(padding, lvl+1)))
 	}
 	result := strings.Join(s, ",\n")
 	return result
@@ -52,7 +52,7 @@ func (n ComplexNode) String(padding, lvl int) string {
 
 func (n ComplexNode) Draw(writer io.Writer, padding, lvl int) error {
 	for key, value := range n.data {
-		fmt.Fprintf("%s%s\n", strings.Repeat(" ", padding+lvl*padding), key)
+		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", lvl*padding), key)
 		value.Draw(writer, padding, lvl+1)
 	}
 	return nil
@@ -71,7 +71,7 @@ type ListNode struct {
 func (n ListNode) stringChildren(padding, lvl int) string {
 	s := []string{}
 	for _, value := range n.data {
-		s = append(s, strings.Repeat(" ", padding+lvl*padding)+value.String(padding, lvl+1))
+		s = append(s, strings.Repeat(" ", lvl*padding)+value.String(padding, lvl+1))
 	}
 	result := strings.Join(s, ",\n")
 	return result
@@ -81,7 +81,12 @@ func (n ListNode) String(padding, lvl int) string {
 	return fmt.Sprintf("[\n%s\n%s]", n.stringChildren(padding, lvl+1), strings.Repeat(" ", lvl*padding))
 }
 
-func (n ListNode) Draw(io.Writer, int, int) error {
+func (n ListNode) Draw(writer io.Writer, padding, lvl int) error {
+	for i, value := range n.data {
+		fmt.Fprintf(writer, "%s[%d]", strings.Repeat(" ", lvl*padding), i)
+		value.Draw(writer, padding, lvl+1)
+		fmt.Fprintf(writer, "\n")
+	}
 	return nil
 
 }
@@ -100,7 +105,6 @@ func (n FloatNode) String(int, int) string {
 }
 
 func (n FloatNode) Draw(writer io.Writer, padding, lvl int) error {
-	fmt.Fprintln(writer, n.String(padding, lvl))
 	return nil
 
 }
@@ -119,7 +123,7 @@ func (n StringNode) String(_, _ int) string {
 }
 
 func (n StringNode) Draw(writer io.Writer, padding, lvl int) error {
-	fmt.Fprintf(writer, n.String(padding, lvl))
+	//fmt.Fprintf(writer, "%s%q\n", strings.Repeat(" ", padding+padding*lvl), n.data)
 	return nil
 
 }
@@ -174,59 +178,6 @@ func NewTree(y interface{}) (TreeNode, error) {
 
 }
 
-/*
-
-func (node *TreeNode) Draw(writer io.Writer, lvl, padding int) error {
-	str := fmt.Sprintf("%-"+strconv.Itoa(padding)+"s",
-		strings.Repeat("  ", lvl)+" "+node.String())
-	fmt.Fprintln(writer, str)
-	if node.isExpanded {
-		for _, child := range node.children {
-			err := child.Draw(writer, lvl+1, padding)
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-func newRecursiveTree(key string, y interface{}) (*TreeNode, error) {
-	var tree *TreeNode
-	switch v := y.(type) {
-	case int:
-		tree = &TreeNode{key, strconv.Itoa(v), TypeInt, nil, true}
-	case float64:
-		tree = &TreeNode{key, strconv.FormatFloat(v, 'f', 6, 64), TypeFloat, nil, true}
-	case string:
-		tree = &TreeNode{key, v, TypeString, nil, true}
-	case map[string]interface{}:
-		children := []*TreeNode{}
-		for key, child := range v {
-			childNode, err := newRecursiveTree(key, child)
-			if err != nil {
-				return nil, err
-			}
-			children = append(children, childNode)
-		}
-		tree = &TreeNode{key, key, TypeComplex, children, true}
-	case []interface{}:
-		children := []*TreeNode{}
-		for i, child := range v {
-			childNode, err := newRecursiveTree(strconv.Itoa(i), child)
-			if err != nil {
-				return nil, err
-			}
-			children = append(children, childNode)
-		}
-		tree = &TreeNode{key, "", TypeList, children, true}
-	default:
-		tree = &TreeNode{key, "TODO", -1, nil, true}
-
-	}
-	return tree, nil
-}
-*/
 func main() {
 	bytes, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
@@ -238,5 +189,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	tree.Draw(os.Stdout, 2, 0)
+	tree.Draw(os.Stdout, 4, 0)
 }
