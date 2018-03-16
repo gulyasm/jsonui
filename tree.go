@@ -34,12 +34,16 @@ type TreeNode interface {
 	Draw(io.Writer, int, int) error
 	Filter(query Query) bool
 	Find(TreePosition) TreeNode
+	ToggleExpanded()
 }
 
 type BaseTreeNode struct {
 	isExpanded bool
 }
 
+func (n *BaseTreeNode) ToggleExpanded() {
+	n.isExpanded = !n.isExpanded
+}
 func (n BaseTreeNode) expIcon() string {
 	if n.isExpanded {
 		return "[+]"
@@ -87,9 +91,13 @@ func (n ComplexNode) Draw(writer io.Writer, padding, lvl int) error {
 	if lvl == 0 {
 		fmt.Fprintf(writer, "%s\n", "root")
 	}
-	for key, value := range n.data {
-		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), key)
-		value.Draw(writer, padding, lvl+1)
+	if n.isExpanded {
+		for key, value := range n.data {
+			fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), key)
+			value.Draw(writer, padding, lvl+1)
+		}
+	} else {
+		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), "+ ...")
 	}
 	return nil
 
@@ -137,9 +145,11 @@ func (n ListNode) Draw(writer io.Writer, padding, lvl int) error {
 	if lvl == 0 {
 		fmt.Fprintf(writer, "%s\n", "root (list)")
 	}
-	for i, value := range n.data {
-		fmt.Fprintf(writer, "%s[%d]\n", strings.Repeat(" ", padding+lvl*padding), i)
-		value.Draw(writer, padding, lvl+1)
+	if n.isExpanded {
+		for i, value := range n.data {
+			fmt.Fprintf(writer, "%s[%d]\n", strings.Repeat(" ", padding+lvl*padding), i)
+			value.Draw(writer, padding, lvl+1)
+		}
 	}
 	return nil
 
