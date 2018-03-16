@@ -150,6 +150,8 @@ func (n ListNode) Draw(writer io.Writer, padding, lvl int) error {
 			fmt.Fprintf(writer, "%s[%d]\n", strings.Repeat(" ", padding+lvl*padding), i)
 			value.Draw(writer, padding, lvl+1)
 		}
+	} else {
+		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), "+ ...")
 	}
 	return nil
 
