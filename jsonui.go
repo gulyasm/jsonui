@@ -2,12 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
-	"strings"
 
 	"github.com/jroimartin/gocui"
 )
@@ -54,18 +50,17 @@ var VIEW_POSITIONS = map[string]viewPosition{
 	},
 }
 
-var message string
+var tree TreeNode
 
 func main() {
-	bytes, err := ioutil.ReadAll(os.Stdin)
+	var err error
+	tree, err = FromReader(os.Stdin)
 	if err != nil {
-		log.Fatal(err)
+		log.Panicln(err)
 	}
-	message = string(bytes)
 	g, err := gocui.NewGui(gocui.OutputNormal)
 	if err != nil {
 		log.Panicln(err)
-
 	}
 	defer g.Close()
 
@@ -77,11 +72,9 @@ func main() {
 
 	if err := g.SetKeybinding(TREE_VIEW, 'k', gocui.ModNone, cursorUp); err != nil {
 		log.Panicln(err)
-
 	}
 	if err := g.SetKeybinding(TREE_VIEW, 'j', gocui.ModNone, cursorDown); err != nil {
 		log.Panicln(err)
-
 	}
 
 	g.SelFgColor = gocui.ColorBlack
@@ -89,44 +82,7 @@ func main() {
 
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
-
 	}
-}
-
-type TreeNode struct {
-	text     string
-	children []*TreeNode
-}
-
-var mytree = TreeNode{
-	"root",
-	[]*TreeNode{
-		&TreeNode{"hello1", []*TreeNode{
-			&TreeNode{"mam", nil},
-			&TreeNode{"mam", nil},
-			&TreeNode{"papapa", nil},
-			&TreeNode{"mam", nil},
-			&TreeNode{"papapa", nil},
-			&TreeNode{"mam", nil},
-			&TreeNode{"papapa", nil},
-			&TreeNode{"mam", nil},
-			&TreeNode{"papapa", nil},
-			&TreeNode{"papapa", nil},
-		}},
-		&TreeNode{"hello2", nil},
-	},
-}
-
-func (node *TreeNode) Draw(writer io.Writer, lvl, padding int) error {
-	str := fmt.Sprintf("%-"+strconv.Itoa(padding)+"s", strings.Repeat("  ", lvl)+" "+node.text)
-	fmt.Fprintln(writer, str)
-	for _, child := range node.children {
-		err := child.Draw(writer, lvl+1, padding)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func layout(g *gocui.Gui) error {
@@ -145,12 +101,8 @@ func layout(g *gocui.Gui) error {
 			}
 			if v.Name() == TREE_VIEW {
 				v.Highlight = true
-				x, _ := v.Size()
-				mytree.Draw(v, 0, x)
+				tree.Draw(v, 2, 0)
 			}
-			if v.Name() == TEXT_VIEW {
-			}
-
 		}
 	}
 	_, err := g.SetCurrentView(TREE_VIEW)
@@ -165,19 +117,8 @@ func drawText(g *gocui.Gui, v *gocui.View) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	tview, err := g.View(TREE_VIEW)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, y := tview.Cursor()
-	line, err := tview.Line(y)
-	if err != nil {
-		log.Fatal("failed to get line> " + strconv.Itoa(y))
-		log.Fatal(err)
-	}
 	textView.Clear()
-	line = strings.TrimSpace(line)
-	fmt.Fprintf(textView, line)
+	fmt.Fprintf(textView, tree.String(2, 0))
 	return nil
 }
 
@@ -203,5 +144,4 @@ func cursorUp(g *gocui.Gui, v *gocui.View) error {
 
 func quit(g *gocui.Gui, v *gocui.View) error {
 	return gocui.ErrQuit
-
 }

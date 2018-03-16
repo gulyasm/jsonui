@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 )
@@ -178,16 +177,16 @@ func NewTree(y interface{}) (TreeNode, error) {
 
 }
 
-func main() {
-	bytes, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		log.Fatal(err)
-	}
+func FromBytes(b []byte) (TreeNode, error) {
 	var y map[string]interface{}
-	json.Unmarshal(bytes, &y)
-	tree, err := NewTree(y)
+	json.Unmarshal(b, &y)
+	return NewTree(y)
+}
+
+func FromReader(r io.Reader) (TreeNode, error) {
+	b, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	tree.Draw(os.Stdout, 4, 0)
+	return FromBytes(b)
 }
