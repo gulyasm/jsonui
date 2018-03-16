@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -76,7 +77,13 @@ func (n ComplexNode) Find(tp TreePosition) TreeNode {
 
 func (n ComplexNode) stringChildren(padding, lvl int) string {
 	s := []string{}
-	for key, value := range n.data {
+	keys := []string{}
+	for key := range n.data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		value, _ := n.data[key]
 		s = append(s, fmt.Sprintf("%s\"%s\": %s", strings.Repeat(" ", padding+lvl*padding), key, value.String(padding, lvl+1)))
 	}
 	result := strings.Join(s, ",\n")
@@ -92,7 +99,13 @@ func (n ComplexNode) Draw(writer io.Writer, padding, lvl int) error {
 		fmt.Fprintf(writer, "%s\n", "root")
 	}
 	if n.isExpanded {
-		for key, value := range n.data {
+		keys := []string{}
+		for key := range n.data {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			value, _ := n.data[key]
 			fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), key)
 			value.Draw(writer, padding, lvl+1)
 		}
