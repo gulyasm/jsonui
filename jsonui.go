@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/jroimartin/gocui"
 )
@@ -128,17 +130,65 @@ func lineBelow(v *gocui.View) bool {
 	return err == nil && line != ""
 }
 
+func CountIndent(s string) int {
+	count := 0
+	for _, c := range s {
+		if c == ' ' {
+			count += 1
+		}
+	}
+	return count
+}
+
+func FindTreePosition(v *gocui.View, dv io.Writer) TreePosition {
+	path := TreePosition{}
+	ci := -1
+	for _, cy := v.Cursor(); cy >= 0; cy -= 1 {
+		line, err := v.Line(cy)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if count := CountIndent(line); count < ci || ci == -1 {
+			path = append(path, strings.TrimSpace(line))
+			ci = count
+		}
+	}
+	for i := len(path)/2 - 1; i >= 0; i-- {
+		opp := len(path) - 1 - i
+		path[i], path[opp] = path[opp], path[i]
+
+	}
+
+	for _, p := range path {
+		fmt.Fprintln(dv, p)
+	}
+	return path
+}
+
+func debugView(g *gocui.Gui) *gocui.View {
+	textView, err := g.View(TEXT_VIEW)
+	if err != nil {
+		log.Fatal(err)
+	}
+	textView.Clear()
+	return textView
+}
+
 func cursorDown(g *gocui.Gui, v *gocui.View) error {
+	dv := debugView(g)
 	if lineBelow(v) {
 		v.MoveCursor(0, 1, false)
-		drawText(g, v)
+		FindTreePosition(v, dv)
 	}
 	return nil
 }
 
 func cursorUp(g *gocui.Gui, v *gocui.View) error {
-	v.MoveCursor(0, -1, false)
-	drawText(g, v)
+	dv := debugView(g)
+	if lineBelow(v) {
+		v.MoveCursor(0, -1, false)
+		FindTreePosition(v, dv)
+	}
 	return nil
 }
 

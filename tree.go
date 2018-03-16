@@ -9,6 +9,20 @@ import (
 	"strings"
 )
 
+type TreePosition []string
+
+func (t TreePosition) Empty() bool {
+	return len(t) == 0
+}
+func (t TreePosition) Shift() TreePosition {
+	newLength := len(t) - 1
+	newPosition := make([]string, newLength, newLength)
+	for i := 0; i < newLength; i += 1 {
+		newPosition[i] = t[i+1]
+	}
+	return newPosition
+}
+
 type Query struct {
 	q string
 }
@@ -17,6 +31,7 @@ type TreeNode interface {
 	String(int, int) string
 	Draw(io.Writer, int, int) error
 	Filter(query Query) bool
+	Find(TreePosition) TreeNode
 }
 
 type BaseTreeNode struct {
@@ -34,6 +49,10 @@ func (n BaseTreeNode) expIcon() string {
 type ComplexNode struct {
 	BaseTreeNode
 	data map[string]TreeNode
+}
+
+func (n ComplexNode) Find(tp TreePosition) TreeNode {
+	return nil
 }
 
 func (n ComplexNode) stringChildren(padding, lvl int) string {
@@ -65,6 +84,10 @@ func (n ComplexNode) Filter(query Query) bool {
 type ListNode struct {
 	BaseTreeNode
 	data []TreeNode
+}
+
+func (n ListNode) Find(tp TreePosition) TreeNode {
+	return nil
 }
 
 func (n ListNode) stringChildren(padding, lvl int) string {
@@ -99,6 +122,11 @@ type FloatNode struct {
 	data float64
 }
 
+func (n FloatNode) Find(tp TreePosition) TreeNode {
+	return nil
+
+}
+
 func (n FloatNode) String(int, int) string {
 	return fmt.Sprintf("%g", n.data)
 }
@@ -115,6 +143,10 @@ func (n FloatNode) Filter(query Query) bool {
 type StringNode struct {
 	BaseTreeNode
 	data string
+}
+
+func (n StringNode) Find(tp TreePosition) TreeNode {
+	return nil
 }
 
 func (n StringNode) String(_, _ int) string {
