@@ -138,9 +138,8 @@ func (n ListNode) Draw(writer io.Writer, padding, lvl int) error {
 		fmt.Fprintf(writer, "%s\n", "root (list)")
 	}
 	for i, value := range n.data {
-		fmt.Fprintf(writer, "%s[%d]", strings.Repeat(" ", padding+lvl*padding), i)
+		fmt.Fprintf(writer, "%s[%d]\n", strings.Repeat(" ", padding+lvl*padding), i)
 		value.Draw(writer, padding, lvl+1)
-		fmt.Fprintf(writer, "\n")
 	}
 	return nil
 
