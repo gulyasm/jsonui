@@ -105,22 +105,32 @@ func layout(g *gocui.Gui) error {
 				v.Highlight = true
 				tree.Draw(v, 2, 0)
 			}
+			if v.Name() == TEXT_VIEW {
+				drawJson(g, v)
+			}
+
 		}
 	}
 	_, err := g.SetCurrentView(TREE_VIEW)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to set current view: ", err)
 	}
 	return nil
 
 }
-func drawText(g *gocui.Gui, v *gocui.View) error {
-	textView, err := g.View(TEXT_VIEW)
+func drawJson(g *gocui.Gui, v *gocui.View) error {
+	dv, err := g.View(TEXT_VIEW)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to get TEXT_VIEW", err)
 	}
-	textView.Clear()
-	fmt.Fprintf(textView, tree.String(2, 0))
+	tv, err := g.View(TREE_VIEW)
+	if err != nil {
+		log.Fatal("failed to get TREE_VIEW", err)
+	}
+	p := FindTreePosition(tv, dv)
+	treeToDraw := tree.Find(p)
+	dv.Clear()
+	fmt.Fprintf(dv, treeToDraw.String(2, 0))
 	return nil
 }
 
@@ -146,7 +156,7 @@ func FindTreePosition(v *gocui.View, dv io.Writer) TreePosition {
 	for _, cy := v.Cursor(); cy >= 0; cy -= 1 {
 		line, err := v.Line(cy)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("failed to grab line: ", err)
 		}
 		if count := CountIndent(line); count < ci || ci == -1 {
 			path = append(path, strings.TrimSpace(line))
@@ -161,23 +171,11 @@ func FindTreePosition(v *gocui.View, dv io.Writer) TreePosition {
 	return path[1:]
 }
 
-func debugView(g *gocui.Gui) *gocui.View {
-	textView, err := g.View(TEXT_VIEW)
-	if err != nil {
-		log.Fatal(err)
-	}
-	textView.Clear()
-	return textView
-}
-
 func cursorMovement(d int) func(g *gocui.Gui, v *gocui.View) error {
 	return func(g *gocui.Gui, v *gocui.View) error {
-		dv := debugView(g)
 		if lineBelow(v, d) {
 			v.MoveCursor(0, d, false)
-			p := FindTreePosition(v, dv)
-			treeToDraw := tree.Find(p)
-			fmt.Fprintf(dv, treeToDraw.String(2, 0))
+			drawJson(g, v)
 		}
 		return nil
 	}
