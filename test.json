@@ -1,10 +1,11 @@
 {
     "name": "gulyasm",
     "age": 12,
-    "complex": {
-        "complex_age": 12,
-        "complex_name": "juli",
-        "complex_list": ["alma"]
+    "price": 876.2341234,
+    "address": {
+        "zip": "H-1056",
+        "city": "Budapest",
+        "gateways": ["Sopron", "Vienna", "Budapest"]
 
     }
 }
