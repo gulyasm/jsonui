@@ -106,6 +106,7 @@ func layout(g *gocui.Gui) error {
 			if v.Name() == TREE_VIEW {
 				v.Highlight = true
 				tree.Draw(v, 2, 0)
+				// v.Autoscroll = true
 			}
 			if v.Name() == TEXT_VIEW {
 				drawJson(g, v)
