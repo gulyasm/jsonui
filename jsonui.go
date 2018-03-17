@@ -162,6 +162,9 @@ func FindTreePosition(v *gocui.View) TreePosition {
 		if err != nil {
 			log.Fatal("failed to grab line: ", err)
 		}
+		if strings.TrimSpace(line) == "+ ..." {
+			continue
+		}
 		if count := CountIndent(line); count < ci || ci == -1 {
 			path = append(path, strings.TrimSpace(line))
 			ci = count
