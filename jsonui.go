@@ -90,6 +90,12 @@ func main() {
 	if err := g.SetKeybinding(TREE_VIEW, 'j', gocui.ModNone, cursorMovement(1)); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding(TREE_VIEW, gocui.KeyArrowUp, gocui.ModNone, cursorMovement(-1)); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding(TREE_VIEW, gocui.KeyArrowDown, gocui.ModNone, cursorMovement(1)); err != nil {
+		log.Panicln(err)
+	}
 	if err := g.SetKeybinding(TREE_VIEW, 'K', gocui.ModNone, cursorMovement(-15)); err != nil {
 		log.Panicln(err)
 	}
