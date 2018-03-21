@@ -208,7 +208,6 @@ func GetLine(s string, y int) string {
 func FindTreePosition(v *gocui.View) TreePosition {
 	path := TreePosition{}
 	ci := -1
-	lg := ""
 	_, yOffset := v.Origin()
 	_, yCurrent := v.Cursor()
 	y := yOffset + yCurrent
