@@ -12,6 +12,7 @@ import (
 const (
 	TREE_VIEW = "tree"
 	TEXT_VIEW = "text"
+	PATH_VIEW = "path"
 )
 
 type position struct {
@@ -41,11 +42,17 @@ var VIEW_POSITIONS = map[string]viewPosition{
 		position{0.0, 0},
 		position{0.0, 0},
 		position{0.2, 2},
-		position{1.0, 2},
+		position{0.9, 2},
 	},
 	TEXT_VIEW: {
 		position{0.2, 0},
 		position{0.0, 0},
+		position{1.0, 2},
+		position{0.9, 2},
+	},
+	PATH_VIEW: {
+		position{0.0, 0},
+		position{0.89, 0},
 		position{1.0, 2},
 		position{1.0, 2},
 	},
@@ -77,10 +84,15 @@ func main() {
 	if err := g.SetKeybinding(TREE_VIEW, 'j', gocui.ModNone, cursorMovement(1)); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding(TREE_VIEW, 'K', gocui.ModNone, cursorMovement(-15)); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding(TREE_VIEW, 'J', gocui.ModNone, cursorMovement(15)); err != nil {
+		log.Panicln(err)
+	}
 	if err := g.SetKeybinding(TREE_VIEW, 'e', gocui.ModNone, toggleExpand); err != nil {
 		log.Panicln(err)
 	}
-
 	g.SelFgColor = gocui.ColorBlack
 	g.SelBgColor = gocui.ColorGreen
 
@@ -90,7 +102,7 @@ func main() {
 }
 
 func layout(g *gocui.Gui) error {
-	var views = []string{TREE_VIEW, TEXT_VIEW}
+	var views = []string{TREE_VIEW, TEXT_VIEW, PATH_VIEW}
 	maxX, maxY := g.Size()
 	for _, view := range views {
 		x0, y0, x1, y1 := VIEW_POSITIONS[view].getCoordinates(maxX, maxY)
@@ -120,6 +132,32 @@ func layout(g *gocui.Gui) error {
 	}
 	return nil
 
+}
+func getPath(g *gocui.Gui, v *gocui.View) string {
+	tv, err := g.View(TREE_VIEW)
+	if err != nil {
+		log.Fatal("failed to get TREE_VIEW", err)
+	}
+	p := FindTreePosition(tv)
+	for i, s := range p {
+		transformed := s
+		if !strings.HasPrefix(s, "[") && !strings.HasSuffix(s, "]") {
+			transformed = fmt.Sprintf("[%q]", s)
+		}
+		p[i] = transformed
+	}
+	return strings.Join(p, "")
+}
+
+func drawPath(g *gocui.Gui, v *gocui.View) error {
+	pv, err := g.View(PATH_VIEW)
+	if err != nil {
+		log.Fatal("failed to get PATH_VIEW", err)
+	}
+	p := getPath(g, v)
+	pv.Clear()
+	fmt.Fprintf(pv, p)
+	return nil
 }
 func drawJson(g *gocui.Gui, v *gocui.View) error {
 	dv, err := g.View(TEXT_VIEW)
@@ -196,6 +234,7 @@ func cursorMovement(d int) func(g *gocui.Gui, v *gocui.View) error {
 		if lineBelow(v, d) {
 			v.MoveCursor(0, d, false)
 			drawJson(g, v)
+			drawPath(g, v)
 		}
 		return nil
 	}
