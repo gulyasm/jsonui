@@ -15,17 +15,17 @@ cat test_big.json | jsonui
 
 ### Keys
 
-### `j`, `DownArrow`
+#### `j`, `DownArrow`
 Move down a line
 
-### `k`, `DownUp`
+#### `k`, `DownUp`
 Move up a line
 
-### `J`
+#### `J`
 Move down 15 lines
 
-### `K`
+#### `K`
 Move up 15 lines
 
-### `e`
+#### `e`
 Toggle node (expend or collapse)
