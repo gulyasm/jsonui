@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -27,6 +28,11 @@ func (p position) getCoordinate(max int) int {
 
 type viewPosition struct {
 	x0, y0, x1, y1 position
+}
+
+func LogFile(s string) error {
+	d1 := []byte(s + "\n")
+	return ioutil.WriteFile("log.txt", d1, 0644)
 }
 
 func (vp viewPosition) getCoordinates(maxX, maxY int) (int, int, int, int) {
@@ -169,6 +175,7 @@ func drawJson(g *gocui.Gui, v *gocui.View) error {
 		log.Fatal("failed to get TREE_VIEW", err)
 	}
 	p := FindTreePosition(tv)
+	LogFile(strings.Join(p, " / "))
 	treeToDraw := tree.Find(p)
 	if treeToDraw != nil {
 		dv.Clear()
@@ -193,14 +200,22 @@ func CountIndent(s string) int {
 	return count
 }
 
+func GetLine(s string, y int) string {
+	lines := strings.Split(s, "\n")
+	return lines[y]
+}
+
 func FindTreePosition(v *gocui.View) TreePosition {
 	path := TreePosition{}
 	ci := -1
-	for _, cy := v.Cursor(); cy >= 0; cy -= 1 {
-		line, err := v.Line(cy)
-		if err != nil {
-			log.Fatal("failed to grab line: ", err)
-		}
+	lg := ""
+	_, yOffset := v.Origin()
+	_, yCurrent := v.Cursor()
+	y := yOffset + yCurrent
+	s := v.Buffer()
+	for cy := y; cy >= 0; cy -= 1 {
+		line := GetLine(s, cy)
+
 		if strings.TrimSpace(line) == "+ ..." {
 			continue
 		}
