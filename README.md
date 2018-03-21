@@ -1,5 +1,5 @@
 # JSONUI
-`jsonui` is an interactive JSON explorer on your command line. You can pipe any JSON into `jsonui` and explore it, copy the path for each element.
+`jsonui` is an interactive JSON explorer in your command line. You can pipe any JSON into `jsonui` and explore it, copy the path for each element.
 
 ![](img/screenshot1.png)
 ![](img/screenshot2.png)
