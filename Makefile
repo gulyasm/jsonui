@@ -4,7 +4,7 @@ installdep:
 	@go get -u github.com/golang/lint/golint
 	@go get -u
 
-build:
+build: installdep
 	@go fmt
 	@go vet
 	@golint
