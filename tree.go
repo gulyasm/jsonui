@@ -12,70 +12,68 @@ import (
 	"strings"
 )
 
-type TreePosition []string
+type treePosition []string
 
-func (t TreePosition) Empty() bool {
+func (t treePosition) empty() bool {
 	return len(t) == 0
 }
-func (t TreePosition) Shift() TreePosition {
+func (t treePosition) shift() treePosition {
 	newLength := len(t) - 1
 	newPosition := make([]string, newLength, newLength)
-	for i := 0; i < newLength; i += 1 {
+	for i := 0; i < newLength; i++ {
 		newPosition[i] = t[i+1]
 	}
 	return newPosition
 }
 
-type Query struct {
+type query struct {
 	q string
 }
 
-type TreeNode interface {
+type treeNode interface {
 	String(int, int) string
-	Draw(io.Writer, int, int) error
-	Filter(query Query) bool
-	Find(TreePosition) TreeNode
-	ToggleExpanded()
+	draw(io.Writer, int, int) error
+	filter(query query) bool
+	find(treePosition) treeNode
+	toggleExpanded()
 }
 
-type BaseTreeNode struct {
+type baseTreeNode struct {
 	isExpanded bool
 }
 
-func (n *BaseTreeNode) ToggleExpanded() {
+func (n *baseTreeNode) toggleExpanded() {
 	n.isExpanded = !n.isExpanded
 }
-func (n BaseTreeNode) expIcon() string {
+func (n baseTreeNode) expIcon() string {
 	if n.isExpanded {
 		return "[+]"
-	} else {
-		return "[-]"
 	}
+	return "[-]"
 }
 
-type ComplexNode struct {
-	BaseTreeNode
-	data map[string]TreeNode
+type complexNode struct {
+	baseTreeNode
+	data map[string]treeNode
 }
 
-func (n ComplexNode) Find(tp TreePosition) TreeNode {
-	if tp.Empty() {
+func (n complexNode) find(tp treePosition) treeNode {
+	if tp.empty() {
 		return &n
 	}
 	e, ok := n.data[tp[0]]
-	newTp := tp.Shift()
+	newTp := tp.shift()
 	if !ok {
 		// This can't happen in theory
 		return nil
 	}
-	if newTp.Empty() {
+	if newTp.empty() {
 		return e
-	} else {
-		return e.Find(newTp)
 	}
+	return e.find(newTp)
 }
 
-func (n ComplexNode) stringChildren(padding, lvl int) string {
+func (n complexNode) stringChildren(padding, lvl int) string {
 	s := []string{}
 	keys := []string{}
 	for key := range n.data {
@@ -90,11 +88,11 @@ func (n ComplexNode) stringChildren(padding, lvl int) string {
 	return result
 }
 
-func (n ComplexNode) String(padding, lvl int) string {
+func (n complexNode) String(padding, lvl int) string {
 	return fmt.Sprintf("{\n%s\n%s}", n.stringChildren(padding, lvl), strings.Repeat(" ", lvl*padding))
 }
 
-func (n ComplexNode) Draw(writer io.Writer, padding, lvl int) error {
+func (n complexNode) draw(writer io.Writer, padding, lvl int) error {
 	if lvl == 0 {
 		fmt.Fprintf(writer, "%s\n", "root")
 	}
@@ -107,7 +105,7 @@ func (n ComplexNode) Draw(writer io.Writer, padding, lvl int) error {
 		for _, key := range keys {
 			value, _ := n.data[key]
 			fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), key)
-			value.Draw(writer, padding, lvl+1)
+			value.draw(writer, padding, lvl+1)
 		}
 	} else {
 		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), "+ ...")
@@ -115,33 +113,32 @@ func (n ComplexNode) Draw(writer io.Writer, padding, lvl int) error {
 	return nil
 
 }
-func (n ComplexNode) Filter(query Query) bool {
+func (n complexNode) filter(query query) bool {
 	return true
 
 }
 
-type ListNode struct {
-	BaseTreeNode
-	data []TreeNode
+type listNode struct {
+	baseTreeNode
+	data []treeNode
 }
 
-func (n ListNode) Find(tp TreePosition) TreeNode {
-	if tp.Empty() {
+func (n listNode) find(tp treePosition) treeNode {
+	if tp.empty() {
 		return &n
 	}
 	i, err := strconv.Atoi(strings.TrimSuffix(strings.TrimPrefix(tp[0], "["), "]"))
 	if err != nil {
 		return nil
 	}
-	newTp := tp.Shift()
-	if newTp.Empty() {
+	newTp := tp.shift()
+	if newTp.empty() {
 		return n.data[i]
-	} else {
-		return n.data[i].Find(newTp)
 	}
+	return n.data[i].find(newTp)
 }
 
-func (n ListNode) stringChildren(padding, lvl int) string {
+func (n listNode) stringChildren(padding, lvl int) string {
 	s := []string{}
 	for _, value := range n.data {
 		s = append(s, strings.Repeat(" ", lvl*padding)+value.String(padding, lvl+1))
@@ -150,18 +147,18 @@ func (n ListNode) stringChildren(padding, lvl int) string {
 	return result
 }
 
-func (n ListNode) String(padding, lvl int) string {
+func (n listNode) String(padding, lvl int) string {
 	return fmt.Sprintf("[\n%s\n%s]", n.stringChildren(padding, lvl+1), strings.Repeat(" ", lvl*padding))
 }
 
-func (n ListNode) Draw(writer io.Writer, padding, lvl int) error {
+func (n listNode) draw(writer io.Writer, padding, lvl int) error {
 	if lvl == 0 {
 		fmt.Fprintf(writer, "%s\n", "root (list)")
 	}
 	if n.isExpanded {
 		for i, value := range n.data {
 			fmt.Fprintf(writer, "%s[%d]\n", strings.Repeat(" ", padding+lvl*padding), i)
-			value.Draw(writer, padding, lvl+1)
+			value.draw(writer, padding, lvl+1)
 		}
 	} else {
 		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), "+ ...")
@@ -169,116 +166,116 @@ func (n ListNode) Draw(writer io.Writer, padding, lvl int) error {
 	return nil
 
 }
-func (n ListNode) Filter(query Query) bool {
+func (n listNode) filter(query query) bool {
 	return true
 
 }
 
-type FloatNode struct {
-	BaseTreeNode
+type floatNode struct {
+	baseTreeNode
 	data float64
 }
 
-func (n FloatNode) Find(tp TreePosition) TreeNode {
+func (n floatNode) find(tp treePosition) treeNode {
 	return nil
 
 }
 
-func (n FloatNode) String(int, int) string {
+func (n floatNode) String(int, int) string {
 	return fmt.Sprintf("%g", n.data)
 }
 
-func (n FloatNode) Draw(writer io.Writer, padding, lvl int) error {
+func (n floatNode) draw(writer io.Writer, padding, lvl int) error {
 	return nil
 
 }
-func (n FloatNode) Filter(query Query) bool {
+func (n floatNode) filter(query query) bool {
 	return true
 
 }
 
-type StringNode struct {
-	BaseTreeNode
+type stringNode struct {
+	baseTreeNode
 	data string
 }
 
-func (n StringNode) Find(tp TreePosition) TreeNode {
+func (n stringNode) find(tp treePosition) treeNode {
 	return nil
 }
 
-func (n StringNode) String(_, _ int) string {
+func (n stringNode) String(_, _ int) string {
 	return fmt.Sprintf("%q", n.data)
 }
 
-func (n StringNode) Draw(writer io.Writer, padding, lvl int) error {
+func (n stringNode) draw(writer io.Writer, padding, lvl int) error {
 	//fmt.Fprintf(writer, "%s%q\n", strings.Repeat(" ", padding+padding*lvl), n.data)
 	return nil
 
 }
-func (n StringNode) Filter(query Query) bool {
+func (n stringNode) filter(query query) bool {
 	return true
 }
 
-func NewTree(y interface{}) (TreeNode, error) {
-	var tree TreeNode
+func newTree(y interface{}) (treeNode, error) {
+	var tree treeNode
 	switch v := y.(type) {
 	case string:
-		tree = &StringNode{
-			BaseTreeNode{true},
+		tree = &stringNode{
+			baseTreeNode{true},
 			v,
 		}
 	case float64:
-		tree = &FloatNode{
-			BaseTreeNode{true},
+		tree = &floatNode{
+			baseTreeNode{true},
 			v,
 		}
 	case map[string]interface{}:
-		data := map[string]TreeNode{}
+		data := map[string]treeNode{}
 		for key, childInterface := range v {
-			childNode, err := NewTree(childInterface)
+			childNode, err := newTree(childInterface)
 			if err != nil {
 				return nil, err
 			}
 			data[key] = childNode
 		}
-		tree = &ComplexNode{
-			BaseTreeNode{true},
+		tree = &complexNode{
+			baseTreeNode{true},
 			data,
 		}
 	case []interface{}:
-		data := []TreeNode{}
+		data := []treeNode{}
 		for _, listItemInterface := range v {
-			listItem, err := NewTree(listItemInterface)
+			listItem, err := newTree(listItemInterface)
 			if err != nil {
 				return nil, err
 			}
 			data = append(data, listItem)
 		}
-		tree = &ListNode{
-			BaseTreeNode{true},
+		tree = &listNode{
+			baseTreeNode{true},
 			data,
 		}
 	default:
-		tree = &StringNode{BaseTreeNode{true}, "TODO"}
+		tree = &stringNode{baseTreeNode{true}, "TODO"}
 
 	}
 	return tree, nil
 
 }
 
-func FromBytes(b []byte) (TreeNode, error) {
+func fromBytes(b []byte) (treeNode, error) {
 	var y interface{}
 	err := json.Unmarshal(b, &y)
 	if err != nil {
 		log.Fatal("failed to marshal raw json: ", err)
 	}
-	return NewTree(y)
+	return newTree(y)
 }
 
-func FromReader(r io.Reader) (TreeNode, error) {
+func fromReader(r io.Reader) (treeNode, error) {
 	b, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
 		return nil, err
 	}
-	return FromBytes(b)
+	return fromBytes(b)
 }

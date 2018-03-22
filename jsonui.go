@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	TREE_VIEW = "tree"
-	TEXT_VIEW = "text"
-	PATH_VIEW = "path"
+	treeView = "tree"
+	textView = "text"
+	pathView = "path"
 )
 
 type position struct {
@@ -30,7 +30,7 @@ type viewPosition struct {
 	x0, y0, x1, y1 position
 }
 
-func LogFile(s string) error {
+func logFile(s string) error {
 	d1 := []byte(s + "\n")
 	return ioutil.WriteFile("log.txt", d1, 0644)
 }
@@ -43,20 +43,20 @@ func (vp viewPosition) getCoordinates(maxX, maxY int) (int, int, int, int) {
 	return x0, y0, x1, y1
 }
 
-var VIEW_POSITIONS = map[string]viewPosition{
-	TREE_VIEW: {
+var viewPositions = map[string]viewPosition{
+	treeView: {
 		position{0.0, 0},
 		position{0.0, 0},
 		position{0.2, 2},
 		position{0.9, 2},
 	},
-	TEXT_VIEW: {
+	textView: {
 		position{0.2, 0},
 		position{0.0, 0},
 		position{1.0, 2},
 		position{0.9, 2},
 	},
-	PATH_VIEW: {
+	pathView: {
 		position{0.0, 0},
 		position{0.89, 0},
 		position{1.0, 2},
@@ -64,11 +64,11 @@ var VIEW_POSITIONS = map[string]viewPosition{
 	},
 }
 
-var tree TreeNode
+var tree treeNode
 
 func main() {
 	var err error
-	tree, err = FromReader(os.Stdin)
+	tree, err = fromReader(os.Stdin)
 	if err != nil {
 		log.Panicln(err)
 	}
@@ -84,25 +84,25 @@ func main() {
 		log.Panicln(err)
 	}
 
-	if err := g.SetKeybinding(TREE_VIEW, 'k', gocui.ModNone, cursorMovement(-1)); err != nil {
+	if err := g.SetKeybinding(treeView, 'k', gocui.ModNone, cursorMovement(-1)); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding(TREE_VIEW, 'j', gocui.ModNone, cursorMovement(1)); err != nil {
+	if err := g.SetKeybinding(treeView, 'j', gocui.ModNone, cursorMovement(1)); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding(TREE_VIEW, gocui.KeyArrowUp, gocui.ModNone, cursorMovement(-1)); err != nil {
+	if err := g.SetKeybinding(treeView, gocui.KeyArrowUp, gocui.ModNone, cursorMovement(-1)); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding(TREE_VIEW, gocui.KeyArrowDown, gocui.ModNone, cursorMovement(1)); err != nil {
+	if err := g.SetKeybinding(treeView, gocui.KeyArrowDown, gocui.ModNone, cursorMovement(1)); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding(TREE_VIEW, 'K', gocui.ModNone, cursorMovement(-15)); err != nil {
+	if err := g.SetKeybinding(treeView, 'K', gocui.ModNone, cursorMovement(-15)); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding(TREE_VIEW, 'J', gocui.ModNone, cursorMovement(15)); err != nil {
+	if err := g.SetKeybinding(treeView, 'J', gocui.ModNone, cursorMovement(15)); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding(TREE_VIEW, 'e', gocui.ModNone, toggleExpand); err != nil {
+	if err := g.SetKeybinding(treeView, 'e', gocui.ModNone, toggleExpand); err != nil {
 		log.Panicln(err)
 	}
 	g.SelFgColor = gocui.ColorBlack
@@ -114,10 +114,10 @@ func main() {
 }
 
 func layout(g *gocui.Gui) error {
-	var views = []string{TREE_VIEW, TEXT_VIEW, PATH_VIEW}
+	var views = []string{treeView, textView, pathView}
 	maxX, maxY := g.Size()
 	for _, view := range views {
-		x0, y0, x1, y1 := VIEW_POSITIONS[view].getCoordinates(maxX, maxY)
+		x0, y0, x1, y1 := viewPositions[view].getCoordinates(maxX, maxY)
 		if v, err := g.SetView(view, x0, y0, x1, y1); err != nil {
 			v.SelFgColor = gocui.ColorBlack
 			v.SelBgColor = gocui.ColorGreen
@@ -127,18 +127,18 @@ func layout(g *gocui.Gui) error {
 				return err
 
 			}
-			if v.Name() == TREE_VIEW {
+			if v.Name() == treeView {
 				v.Highlight = true
-				tree.Draw(v, 2, 0)
+				tree.draw(v, 2, 0)
 				// v.Autoscroll = true
 			}
-			if v.Name() == TEXT_VIEW {
-				drawJson(g, v)
+			if v.Name() == textView {
+				drawJSON(g, v)
 			}
 
 		}
 	}
-	_, err := g.SetCurrentView(TREE_VIEW)
+	_, err := g.SetCurrentView(treeView)
 	if err != nil {
 		log.Fatal("failed to set current view: ", err)
 	}
@@ -146,11 +146,11 @@ func layout(g *gocui.Gui) error {
 
 }
 func getPath(g *gocui.Gui, v *gocui.View) string {
-	tv, err := g.View(TREE_VIEW)
+	tv, err := g.View(treeView)
 	if err != nil {
-		log.Fatal("failed to get TREE_VIEW", err)
+		log.Fatal("failed to get treeView", err)
 	}
-	p := FindTreePosition(tv)
+	p := findTreePosition(tv)
 	for i, s := range p {
 		transformed := s
 		if !strings.HasPrefix(s, "[") && !strings.HasSuffix(s, "]") {
@@ -162,29 +162,29 @@ func getPath(g *gocui.Gui, v *gocui.View) string {
 }
 
 func drawPath(g *gocui.Gui, v *gocui.View) error {
-	pv, err := g.View(PATH_VIEW)
+	pv, err := g.View(pathView)
 	if err != nil {
-		log.Fatal("failed to get PATH_VIEW", err)
+		log.Fatal("failed to get pathView", err)
 	}
 	p := getPath(g, v)
 	pv.Clear()
 	fmt.Fprintf(pv, p)
 	return nil
 }
-func drawJson(g *gocui.Gui, v *gocui.View) error {
-	dv, err := g.View(TEXT_VIEW)
+func drawJSON(g *gocui.Gui, v *gocui.View) error {
+	dv, err := g.View(textView)
 	if err != nil {
-		log.Fatal("failed to get TEXT_VIEW", err)
+		log.Fatal("failed to get textView", err)
 	}
-	tv, err := g.View(TREE_VIEW)
+	tv, err := g.View(treeView)
 	if err != nil {
-		log.Fatal("failed to get TREE_VIEW", err)
+		log.Fatal("failed to get treeView", err)
 	}
-	p := FindTreePosition(tv)
-	treeToDraw := tree.Find(p)
-	if treeToDraw != nil {
+	p := findTreePosition(tv)
+	treeTodraw := tree.find(p)
+	if treeTodraw != nil {
 		dv.Clear()
-		fmt.Fprintf(dv, treeToDraw.String(2, 0))
+		fmt.Fprintf(dv, treeTodraw.String(2, 0))
 	}
 	return nil
 }
@@ -195,35 +195,35 @@ func lineBelow(v *gocui.View, d int) bool {
 	return err == nil && line != ""
 }
 
-func CountIndent(s string) int {
+func countIndex(s string) int {
 	count := 0
 	for _, c := range s {
 		if c == ' ' {
-			count += 1
+			count++
 		}
 	}
 	return count
 }
 
-func GetLine(s string, y int) string {
+func getLine(s string, y int) string {
 	lines := strings.Split(s, "\n")
 	return lines[y]
 }
 
-func FindTreePosition(v *gocui.View) TreePosition {
-	path := TreePosition{}
+func findTreePosition(v *gocui.View) treePosition {
+	path := treePosition{}
 	ci := -1
 	_, yOffset := v.Origin()
 	_, yCurrent := v.Cursor()
 	y := yOffset + yCurrent
 	s := v.Buffer()
-	for cy := y; cy >= 0; cy -= 1 {
-		line := GetLine(s, cy)
+	for cy := y; cy >= 0; cy-- {
+		line := getLine(s, cy)
 
 		if strings.TrimSpace(line) == "+ ..." {
 			continue
 		}
-		if count := CountIndent(line); count < ci || ci == -1 {
+		if count := countIndex(line); count < ci || ci == -1 {
 			path = append(path, strings.TrimSpace(line))
 			ci = count
 		}
@@ -237,22 +237,22 @@ func FindTreePosition(v *gocui.View) TreePosition {
 }
 
 func toggleExpand(g *gocui.Gui, v *gocui.View) error {
-	tv, err := g.View(TREE_VIEW)
+	tv, err := g.View(treeView)
 	if err != nil {
-		log.Fatal("failed to get TREE_VIEW", err)
+		log.Fatal("failed to get treeView", err)
 	}
-	p := FindTreePosition(tv)
-	subTree := tree.Find(p)
-	subTree.ToggleExpanded()
+	p := findTreePosition(tv)
+	subTree := tree.find(p)
+	subTree.toggleExpanded()
 	tv.Clear()
-	tree.Draw(tv, 2, 0)
+	tree.draw(tv, 2, 0)
 	return nil
 }
 func cursorMovement(d int) func(g *gocui.Gui, v *gocui.View) error {
 	return func(g *gocui.Gui, v *gocui.View) error {
 		if lineBelow(v, d) {
 			v.MoveCursor(0, d, false)
-			drawJson(g, v)
+			drawJSON(g, v)
 			drawPath(g, v)
 		}
 		return nil
