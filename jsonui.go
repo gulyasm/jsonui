@@ -181,7 +181,6 @@ func drawJson(g *gocui.Gui, v *gocui.View) error {
 		log.Fatal("failed to get TREE_VIEW", err)
 	}
 	p := FindTreePosition(tv)
-	LogFile(strings.Join(p, " / "))
 	treeToDraw := tree.Find(p)
 	if treeToDraw != nil {
 		dv.Clear()
