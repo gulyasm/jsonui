@@ -3,8 +3,7 @@
 
 `jsonui` is an interactive JSON explorer in your command line. You can pipe any JSON into `jsonui` and explore it, copy the path for each element.
 
-![](img/screenshot1.png)
-![](img/screenshot2.png)
+![](img/output.gif)
 
 ## Install
 `go get github.com/gulyasm.jsonui`
