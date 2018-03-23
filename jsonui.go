@@ -102,6 +102,12 @@ func main() {
 	if err := g.SetKeybinding(treeView, 'J', gocui.ModNone, cursorMovement(15)); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding(treeView, gocui.KeyPgup, gocui.ModNone, cursorMovement(-15)); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding(treeView, gocui.KeyPgdn, gocui.ModNone, cursorMovement(15)); err != nil {
+		log.Panicln(err)
+	}
 	if err := g.SetKeybinding(treeView, 'e', gocui.ModNone, toggleExpand); err != nil {
 		log.Panicln(err)
 	}
