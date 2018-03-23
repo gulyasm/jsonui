@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"strings"
 
@@ -14,6 +15,7 @@ const (
 	treeView = "tree"
 	textView = "text"
 	pathView = "path"
+	helpView = "help"
 )
 
 type position struct {
@@ -42,6 +44,8 @@ func (vp viewPosition) getCoordinates(maxX, maxY int) (int, int, int, int) {
 	var y1 = vp.y1.getCoordinate(maxY)
 	return x0, y0, x1, y1
 }
+
+var helpWindowToggle bool = false
 
 var viewPositions = map[string]viewPosition{
 	treeView: {
@@ -111,6 +115,12 @@ func main() {
 	if err := g.SetKeybinding(treeView, 'e', gocui.ModNone, toggleExpand); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding("", 'h', gocui.ModNone, toggleHelp); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding("", '?', gocui.ModNone, toggleHelp); err != nil {
+		log.Panicln(err)
+	}
 	g.SelFgColor = gocui.ColorBlack
 	g.SelBgColor = gocui.ColorGreen
 
@@ -118,6 +128,17 @@ func main() {
 		log.Panicln(err)
 	}
 }
+
+const helpMessage = `
+JSONUI - Help
+----------------------------------------------
+j/ArrowDown		═ 	Move a line down
+k/ArrowUp 		═ 	Move a line up
+J/PageDown		═ 	Move 15 line down
+K/PageUp 		═ 	Move 15 line up
+e				═ 	Toggle expend/collapse node
+h/?				═ 	Toggle help message
+`
 
 func layout(g *gocui.Gui) error {
 	var views = []string{treeView, textView, pathView}
@@ -143,6 +164,23 @@ func layout(g *gocui.Gui) error {
 			}
 
 		}
+	}
+	if helpWindowToggle {
+		height := strings.Count(helpMessage, "\n") + 1
+		width := -1
+		for _, line := range strings.Split(helpMessage, "\n") {
+			width = int(math.Max(float64(width), float64(len(line)+2)))
+		}
+		if v, err := g.SetView(helpView, maxX/2-width/2, maxY/2-height/2, maxX/2+width/2, maxY/2+height/2); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+
+			}
+			fmt.Fprintln(v, helpMessage)
+
+		}
+	} else {
+		g.DeleteView(helpView)
 	}
 	_, err := g.SetCurrentView(treeView)
 	if err != nil {
@@ -263,6 +301,10 @@ func cursorMovement(d int) func(g *gocui.Gui, v *gocui.View) error {
 		}
 		return nil
 	}
+}
+func toggleHelp(g *gocui.Gui, v *gocui.View) error {
+	helpWindowToggle = !helpWindowToggle
+	return nil
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
