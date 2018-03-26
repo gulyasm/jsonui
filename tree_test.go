@@ -7,6 +7,7 @@ import (
 
 // TODO(gulyasm): write multi lvl draw
 func TestDrawTree(t *testing.T) {
+	t.SkipNow()
 	var json = []byte(`
 	{
 		"alma": 1, 
