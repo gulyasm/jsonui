@@ -45,7 +45,7 @@ func (vp viewPosition) getCoordinates(maxX, maxY int) (int, int, int, int) {
 	return x0, y0, x1, y1
 }
 
-var helpWindowToggle bool = false
+var helpWindowToggle = false
 
 var viewPositions = map[string]viewPosition{
 	treeView: {
@@ -254,6 +254,14 @@ func getLine(s string, y int) string {
 	return lines[y]
 }
 
+var cleanPatterns = []string{
+	treeSignUpEnding,
+	treeSignDash,
+	treeSignUpMiddle,
+	treeSignVertical,
+	" (+)",
+}
+
 func findTreePosition(v *gocui.View) treePosition {
 	path := treePosition{}
 	ci := -1
@@ -263,10 +271,10 @@ func findTreePosition(v *gocui.View) treePosition {
 	s := v.Buffer()
 	for cy := y; cy >= 0; cy-- {
 		line := getLine(s, cy)
-
-		if strings.TrimSpace(line) == "+ ..." {
-			continue
+		for _, pattern := range cleanPatterns {
+			line = strings.Replace(line, pattern, "", -1)
 		}
+
 		if count := countIndex(line); count < ci || ci == -1 {
 			path = append(path, strings.TrimSpace(line))
 			ci = count

@@ -1,8 +1,8 @@
 default: build
 
 installdep:
-	@go get -u github.com/golang/lint/golint
-	@go get -u
+	@go get github.com/golang/lint/golint
+	@go get
 
 build: installdep
 	@go fmt

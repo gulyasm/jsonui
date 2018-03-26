@@ -12,6 +12,13 @@ import (
 	"strings"
 )
 
+const (
+	treeSignDash     = "─"
+	treeSignVertical = "│"
+	treeSignUpMiddle = "├"
+	treeSignUpEnding = "└"
+)
+
 type treePosition []string
 
 func (t treePosition) empty() bool {
@@ -35,18 +42,26 @@ type treeNode interface {
 	draw(io.Writer, int, int) error
 	filter(query query) bool
 	find(treePosition) treeNode
+	search(query string) (treeNode, error)
+	isCollapsable() bool
 	toggleExpanded()
+	isExpanded() bool
 }
 
 type baseTreeNode struct {
-	isExpanded bool
+	expanded bool
+}
+
+func (n *baseTreeNode) isExpanded() bool {
+	return n.expanded
 }
 
 func (n *baseTreeNode) toggleExpanded() {
-	n.isExpanded = !n.isExpanded
+	n.expanded = !n.expanded
 }
+
 func (n baseTreeNode) expIcon() string {
-	if n.isExpanded {
+	if n.expanded {
 		return "[+]"
 	}
 	return "[-]"
@@ -57,6 +72,21 @@ type complexNode struct {
 	data map[string]treeNode
 }
 
+func (n complexNode) isCollapsable() bool {
+	return true
+}
+func (n complexNode) search(query string) (treeNode, error) {
+	filteredNode := &complexNode{
+		baseTreeNode{true},
+		map[string]treeNode{},
+	}
+	for key, value := range n.data {
+		if key == query {
+			filteredNode.data[key] = value
+		}
+	}
+	return filteredNode, nil
+}
 func (n complexNode) find(tp treePosition) treeNode {
 	if tp.empty() {
 		return &n
@@ -96,19 +126,35 @@ func (n complexNode) draw(writer io.Writer, padding, lvl int) error {
 	if lvl == 0 {
 		fmt.Fprintf(writer, "%s\n", "root")
 	}
-	if n.isExpanded {
-		keys := []string{}
-		for key := range n.data {
-			keys = append(keys, key)
+	keys := []string{}
+	for key := range n.data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	length := len(keys)
+	for i, key := range keys {
+		value, _ := n.data[key]
+		var char string
+		if i < length-1 {
+			char = treeSignUpMiddle
+		} else {
+			char = treeSignUpEnding
 		}
-		sort.Strings(keys)
-		for _, key := range keys {
-			value, _ := n.data[key]
-			fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), key)
+		char += treeSignDash
+		expendedCharacter := ""
+		if value.isCollapsable() && !value.isExpanded() {
+			expendedCharacter += " (+)"
+		}
+		fmt.Fprintf(writer,
+			"%s%s %s%s\n",
+			strings.Repeat("│  ", lvl),
+			char,
+			key,
+			expendedCharacter,
+		)
+		if value.isExpanded() {
 			value.draw(writer, padding, lvl+1)
 		}
-	} else {
-		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), "+ ...")
 	}
 	return nil
 
@@ -123,6 +169,14 @@ type listNode struct {
 	data []treeNode
 }
 
+func (n listNode) isCollapsable() bool {
+	return true
+}
+
+func (n listNode) search(query string) (treeNode, error) {
+	return nil, nil
+
+}
 func (n listNode) find(tp treePosition) treeNode {
 	if tp.empty() {
 		return &n
@@ -153,15 +207,33 @@ func (n listNode) String(padding, lvl int) string {
 
 func (n listNode) draw(writer io.Writer, padding, lvl int) error {
 	if lvl == 0 {
-		fmt.Fprintf(writer, "%s\n", "root (list)")
+		fmt.Fprintf(writer, "%s\n", "root")
 	}
-	if n.isExpanded {
-		for i, value := range n.data {
-			fmt.Fprintf(writer, "%s[%d]\n", strings.Repeat(" ", padding+lvl*padding), i)
+	length := len(n.data)
+	for i, value := range n.data {
+		var char string
+		if i < length-1 {
+			char = treeSignUpMiddle
+		} else {
+			char = treeSignUpEnding
+		}
+		char += treeSignDash
+		expendedCharacter := ""
+
+		if value.isCollapsable() && !value.isExpanded() {
+			expendedCharacter += " (+)"
+		}
+
+		fmt.Fprintf(writer,
+			"%s%s [%d]%s\n",
+			strings.Repeat("│  ", lvl),
+			char,
+			i,
+			expendedCharacter,
+		)
+		if value.isExpanded() {
 			value.draw(writer, padding, lvl+1)
 		}
-	} else {
-		fmt.Fprintf(writer, "%s%s\n", strings.Repeat(" ", padding+lvl*padding), "+ ...")
 	}
 	return nil
 
@@ -176,6 +248,12 @@ type floatNode struct {
 	data float64
 }
 
+func (n floatNode) isCollapsable() bool {
+	return false
+}
+func (n floatNode) search(query string) (treeNode, error) {
+	return nil, nil
+}
 func (n floatNode) find(tp treePosition) treeNode {
 	return nil
 
@@ -199,6 +277,10 @@ type stringNode struct {
 	data string
 }
 
+func (n stringNode) isCollapsable() bool {
+	return false
+}
+
 func (n stringNode) find(tp treePosition) treeNode {
 	return nil
 }
@@ -207,6 +289,10 @@ func (n stringNode) String(_, _ int) string {
 	return fmt.Sprintf("%q", n.data)
 }
 
+func (n stringNode) search(query string) (treeNode, error) {
+	return nil, nil
+
+}
 func (n stringNode) draw(writer io.Writer, padding, lvl int) error {
 	//fmt.Fprintf(writer, "%s%q\n", strings.Repeat(" ", padding+padding*lvl), n.data)
 	return nil

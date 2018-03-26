@@ -1,6 +1,46 @@
 package main
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
+
+// TODO(gulyasm): write multi lvl draw
+func TestDrawTree(t *testing.T) {
+	var json = []byte(`
+	{
+		"alma": 1, 
+		"barack": {
+			"barack_1": 12, 
+			"barack_2": "sdfsf", 
+			"barack_3": [1,2,3],
+			"wazz_barack_4": "sdsfe"
+		},
+		"wazz": 1 
+	}`)
+	var expected = `
+root
+├─ alma
+├── barack
+│   ├─ barack_1
+│   ├─ barack_2
+│   ├─ barack_3
+│   │  ├─ [0]
+│   │  ├─ [1]
+│   │  └─ [2]
+│   └─ wazz_barack_4
+└── wazz
+`
+	tree, err := fromBytes(json)
+	if err != nil {
+		t.Fatalf("failed to convert JSON to tree")
+	}
+	var result bytes.Buffer
+	tree.draw(&result, 2, 0)
+	if expected != result.String() {
+		t.Fatalf("tree drawing failed. Result tree:\n%s", result.String())
+	}
+}
 
 func TestListTree(t *testing.T) {
 	raw := []byte(`[1,234,35]`)
