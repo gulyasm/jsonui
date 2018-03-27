@@ -337,9 +337,47 @@ func (n stringNode) filter(query query) bool {
 	return true
 }
 
+type boolNode struct {
+	baseTreeNode
+	data bool
+}
+
+func (n *boolNode) collapseAll() {
+}
+func (n *boolNode) expandAll() {
+}
+
+func (n boolNode) isCollapsable() bool {
+	return false
+}
+
+func (n boolNode) find(tp treePosition) treeNode {
+	return nil
+}
+
+func (n boolNode) String(_, _ int) string {
+	return fmt.Sprintf("%t", n.data)
+}
+
+func (n boolNode) search(query string) (treeNode, error) {
+	return nil, nil
+
+}
+func (n boolNode) draw(writer io.Writer, padding, lvl int) error {
+	return nil
+
+}
+func (n boolNode) filter(query query) bool {
+	return true
+}
 func newTree(y interface{}) (treeNode, error) {
 	var tree treeNode
 	switch v := y.(type) {
+	case bool:
+		tree = &boolNode{
+			baseTreeNode{true},
+			v,
+		}
 	case string:
 		tree = &stringNode{
 			baseTreeNode{true},
