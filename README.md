@@ -22,11 +22,20 @@ Move down a line
 #### `k`, `DownUp`
 Move up a line
 
-#### `J`
+#### `J/PageDown`
 Move down 15 lines
 
-#### `K`
+#### `K/PageUp`
 Move up 15 lines
+
+#### `h/?`
+Toggle Help view
 
 #### `e`
 Toggle node (expend or collapse)
+
+#### `E`
+Expand all nodes
+
+#### `C`
+Collapse all nodes
