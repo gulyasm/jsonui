@@ -115,6 +115,12 @@ func main() {
 	if err := g.SetKeybinding(treeView, 'e', gocui.ModNone, toggleExpand); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding(treeView, 'E', gocui.ModNone, expandAll); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding(treeView, 'C', gocui.ModNone, collapseAll); err != nil {
+		log.Panicln(err)
+	}
 	if err := g.SetKeybinding("", 'h', gocui.ModNone, toggleHelp); err != nil {
 		log.Panicln(err)
 	}
@@ -137,6 +143,8 @@ k/ArrowUp 		═ 	Move a line up
 J/PageDown		═ 	Move 15 line down
 K/PageUp 		═ 	Move 15 line up
 e				═ 	Toggle expend/collapse node
+E				═ 	Expand all nodes
+C				═ 	Collapse all nodes
 h/?				═ 	Toggle help message
 `
 
@@ -288,6 +296,18 @@ func findTreePosition(v *gocui.View) treePosition {
 	return path[1:]
 }
 
+func expandAll(g *gocui.Gui, v *gocui.View) error {
+	tree.expandAll()
+	v.Clear()
+	tree.draw(v, 2, 0)
+	return nil
+}
+func collapseAll(g *gocui.Gui, v *gocui.View) error {
+	tree.collapseAll()
+	v.Clear()
+	tree.draw(v, 2, 0)
+	return nil
+}
 func toggleExpand(g *gocui.Gui, v *gocui.View) error {
 	tv, err := g.View(treeView)
 	if err != nil {

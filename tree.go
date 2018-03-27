@@ -45,6 +45,8 @@ type treeNode interface {
 	search(query string) (treeNode, error)
 	isCollapsable() bool
 	toggleExpanded()
+	collapseAll()
+	expandAll()
 	isExpanded() bool
 }
 
@@ -72,6 +74,18 @@ type complexNode struct {
 	data map[string]treeNode
 }
 
+func (n *complexNode) collapseAll() {
+	n.expanded = false
+	for _, v := range n.data {
+		v.collapseAll()
+	}
+}
+func (n *complexNode) expandAll() {
+	n.expanded = true
+	for _, v := range n.data {
+		v.expandAll()
+	}
+}
 func (n complexNode) isCollapsable() bool {
 	return true
 }
@@ -169,6 +183,18 @@ type listNode struct {
 	data []treeNode
 }
 
+func (n *listNode) collapseAll() {
+	n.expanded = false
+	for _, v := range n.data {
+		v.collapseAll()
+	}
+}
+func (n *listNode) expandAll() {
+	n.expanded = true
+	for _, v := range n.data {
+		v.expandAll()
+	}
+}
 func (n listNode) isCollapsable() bool {
 	return true
 }
@@ -248,6 +274,10 @@ type floatNode struct {
 	data float64
 }
 
+func (n *floatNode) collapseAll() {
+}
+func (n *floatNode) expandAll() {
+}
 func (n floatNode) isCollapsable() bool {
 	return false
 }
@@ -275,6 +305,11 @@ func (n floatNode) filter(query query) bool {
 type stringNode struct {
 	baseTreeNode
 	data string
+}
+
+func (n *stringNode) collapseAll() {
+}
+func (n *stringNode) expandAll() {
 }
 
 func (n stringNode) isCollapsable() bool {
