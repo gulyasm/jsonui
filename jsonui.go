@@ -51,11 +51,11 @@ var viewPositions = map[string]viewPosition{
 	treeView: {
 		position{0.0, 0},
 		position{0.0, 0},
-		position{0.4, 2},
+		position{0.3, 2},
 		position{0.9, 2},
 	},
 	textView: {
-		position{0.4, 0},
+		position{0.3, 0},
 		position{0.0, 0},
 		position{1.0, 2},
 		position{0.9, 2},
