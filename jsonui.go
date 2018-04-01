@@ -14,10 +14,11 @@ import (
 const VERSION = "1.0.1"
 
 const (
-	treeView = "tree"
-	textView = "text"
-	pathView = "path"
-	helpView = "help"
+	searchView = "search"
+	treeView   = "tree"
+	textView   = "text"
+	pathView   = "path"
+	helpView   = "help"
 )
 
 type position struct {
@@ -49,24 +50,31 @@ func (vp viewPosition) getCoordinates(maxX, maxY int) (int, int, int, int) {
 
 var helpWindowToggle = false
 
+// x0, y0, x1, y1
 var viewPositions = map[string]viewPosition{
+	searchView: {
+		position{0.0, 0},
+		position{0.0, 0},
+		position{1.0, 1},
+		position{0.1, 1},
+	},
 	treeView: {
 		position{0.0, 0},
-		position{0.0, 0},
-		position{0.3, 2},
+		position{0.1, 0},
+		position{0.3, 1},
 		position{0.9, 2},
 	},
 	textView: {
 		position{0.3, 0},
-		position{0.0, 0},
-		position{1.0, 2},
+		position{0.1, 0},
+		position{1.0, 1},
 		position{0.9, 2},
 	},
 	pathView: {
 		position{0.0, 0},
 		position{0.89, 0},
-		position{1.0, 2},
-		position{1.0, 2},
+		position{1.0, 1},
+		position{1.0, 1},
 	},
 }
 
@@ -123,6 +131,12 @@ func main() {
 	if err := g.SetKeybinding(treeView, 'E', gocui.ModNone, expandAll); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding("", 's', gocui.ModNone, focusView(searchView)); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding("", 't', gocui.ModNone, focusView(treeView)); err != nil {
+		log.Panicln(err)
+	}
 	if err := g.SetKeybinding(treeView, 'C', gocui.ModNone, collapseAll); err != nil {
 		log.Panicln(err)
 	}
@@ -154,8 +168,27 @@ q/ctrl+c		═ 	Exit
 h/?				═ 	Toggle help message
 `
 
+type DefaultEditor struct {
+	g *gocui.Gui
+}
+
+func (d *DefaultEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+	switch {
+	case ch != 0 && mod == 0:
+		v.EditWrite(ch)
+		search(v.Buffer(), d.g, v)
+	case key == gocui.KeySpace:
+		return
+	case key == gocui.KeyBackspace || key == gocui.KeyBackspace2:
+		v.EditDelete(true)
+		search(v.Buffer(), d.g, v)
+	default:
+		return
+	}
+
+}
 func layout(g *gocui.Gui) error {
-	var views = []string{treeView, textView, pathView}
+	var views = []string{searchView, treeView, textView, pathView}
 	maxX, maxY := g.Size()
 	for _, view := range views {
 		x0, y0, x1, y1 := viewPositions[view].getCoordinates(maxX, maxY)
@@ -166,16 +199,21 @@ func layout(g *gocui.Gui) error {
 			v.Title = " " + view + " "
 			if err != gocui.ErrUnknownView {
 				return err
-
 			}
+
+			if v.Name() == searchView {
+				v.Editor = &DefaultEditor{g}
+				v.Editable = true
+			}
+
 			if v.Name() == treeView {
 				v.Highlight = true
 				drawTree(g, v, tree)
-				// v.Autoscroll = true
 			}
 			if v.Name() == textView {
 				drawJSON(g, v)
 			}
+			g.Highlight = true
 
 		}
 	}
@@ -195,10 +233,6 @@ func layout(g *gocui.Gui) error {
 		}
 	} else {
 		g.DeleteView(helpView)
-	}
-	_, err := g.SetCurrentView(treeView)
-	if err != nil {
-		log.Fatal("failed to set current view: ", err)
 	}
 	return nil
 
@@ -328,9 +362,25 @@ func expandAll(g *gocui.Gui, v *gocui.View) error {
 	return drawTree(g, v, tree)
 }
 
+func focusView(view string) func(g *gocui.Gui, v *gocui.View) error {
+	return func(g *gocui.Gui, v *gocui.View) error {
+		g.SetCurrentView(view)
+		return nil
+	}
+}
+
 func collapseAll(g *gocui.Gui, v *gocui.View) error {
 	tree.collapseAll()
 	return drawTree(g, v, tree)
+}
+
+func search(query string, g *gocui.Gui, v *gocui.View) error {
+	query = strings.TrimSuffix(query, "\n")
+	filteredTree, _ := tree.search(query)
+	if filteredTree != nil {
+		drawTree(g, v, filteredTree)
+	}
+	return nil
 }
 
 func toggleExpand(g *gocui.Gui, v *gocui.View) error {
