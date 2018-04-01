@@ -164,7 +164,7 @@ func layout(g *gocui.Gui) error {
 			}
 			if v.Name() == treeView {
 				v.Highlight = true
-				tree.draw(v, 2, 0)
+				drawTree(g, v, tree)
 				// v.Autoscroll = true
 			}
 			if v.Name() == textView {
@@ -198,11 +198,7 @@ func layout(g *gocui.Gui) error {
 
 }
 func getPath(g *gocui.Gui, v *gocui.View) string {
-	tv, err := g.View(treeView)
-	if err != nil {
-		log.Fatal("failed to get treeView", err)
-	}
-	p := findTreePosition(tv)
+	p := findTreePosition(g)
 	for i, s := range p {
 		transformed := s
 		if !strings.HasPrefix(s, "[") && !strings.HasSuffix(s, "]") {
@@ -228,11 +224,7 @@ func drawJSON(g *gocui.Gui, v *gocui.View) error {
 	if err != nil {
 		log.Fatal("failed to get textView", err)
 	}
-	tv, err := g.View(treeView)
-	if err != nil {
-		log.Fatal("failed to get treeView", err)
-	}
-	p := findTreePosition(tv)
+	p := findTreePosition(g)
 	treeTodraw := tree.find(p)
 	if treeTodraw != nil {
 		dv.Clear()
@@ -270,7 +262,11 @@ var cleanPatterns = []string{
 	" (+)",
 }
 
-func findTreePosition(v *gocui.View) treePosition {
+func findTreePosition(g *gocui.Gui) treePosition {
+	v, err := g.View(treeView)
+	if err != nil {
+		log.Fatal("failed to get treeview", err)
+	}
 	path := treePosition{}
 	ci := -1
 	_, yOffset := v.Origin()
@@ -296,36 +292,62 @@ func findTreePosition(v *gocui.View) treePosition {
 	return path[1:]
 }
 
-func expandAll(g *gocui.Gui, v *gocui.View) error {
-	tree.expandAll()
-	v.Clear()
-	tree.draw(v, 2, 0)
-	return nil
+// This is a workaround for not having a Buffer
+// function in gocui
+func bufferLen(v *gocui.View) int {
+	s := v.Buffer()
+	return len(strings.Split(s, "\n")) - 1
 }
-func collapseAll(g *gocui.Gui, v *gocui.View) error {
-	tree.collapseAll()
-	v.Clear()
-	tree.draw(v, 2, 0)
-	return nil
-}
-func toggleExpand(g *gocui.Gui, v *gocui.View) error {
+
+func drawTree(g *gocui.Gui, v *gocui.View, tree treeNode) error {
 	tv, err := g.View(treeView)
 	if err != nil {
 		log.Fatal("failed to get treeView", err)
 	}
-	p := findTreePosition(tv)
-	subTree := tree.find(p)
-	subTree.toggleExpanded()
 	tv.Clear()
 	tree.draw(tv, 2, 0)
+	maxY := bufferLen(tv)
+	cx, cy := tv.Cursor()
+	lastLine := maxY - 2
+	if cy > lastLine {
+		tv.SetCursor(cx, lastLine)
+		tv.SetOrigin(0, 0)
+	}
+
 	return nil
 }
+
+func expandAll(g *gocui.Gui, v *gocui.View) error {
+	tree.expandAll()
+	return drawTree(g, v, tree)
+}
+
+func collapseAll(g *gocui.Gui, v *gocui.View) error {
+	tree.collapseAll()
+	return drawTree(g, v, tree)
+}
+
+func toggleExpand(g *gocui.Gui, v *gocui.View) error {
+	p := findTreePosition(g)
+	subTree := tree.find(p)
+	subTree.toggleExpanded()
+	return drawTree(g, v, tree)
+}
+
 func cursorMovement(d int) func(g *gocui.Gui, v *gocui.View) error {
 	return func(g *gocui.Gui, v *gocui.View) error {
-		if lineBelow(v, d) {
-			v.MoveCursor(0, d, false)
-			drawJSON(g, v)
-			drawPath(g, v)
+		dir := 1
+		if d < 0 {
+			dir = -1
+		}
+		distance := int(math.Abs(float64(d)))
+		for ; distance > 0; distance-- {
+			if lineBelow(v, distance*dir) {
+				v.MoveCursor(0, distance*dir, false)
+				drawJSON(g, v)
+				drawPath(g, v)
+				return nil
+			}
 		}
 		return nil
 	}
