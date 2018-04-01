@@ -6,7 +6,7 @@
 ![](img/output.gif)
 
 ## Install
-`go get github.com/gulyasm.jsonui`
+`go get -u github.com/gulyasm/jsonui`
 
 ## Usage
 Just use the standard output:
