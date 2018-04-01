@@ -322,10 +322,19 @@ func toggleExpand(g *gocui.Gui, v *gocui.View) error {
 }
 func cursorMovement(d int) func(g *gocui.Gui, v *gocui.View) error {
 	return func(g *gocui.Gui, v *gocui.View) error {
-		if lineBelow(v, d) {
-			v.MoveCursor(0, d, false)
-			drawJSON(g, v)
-			drawPath(g, v)
+		dir := 1
+		if d < 0 {
+			dir = -1
+		}
+		distance := int(math.Abs(float64(d)))
+		for ; distance > 0; distance-- {
+			if lineBelow(v, distance*dir) {
+				logFile(fmt.Sprintf("jumped distance: %v", distance*dir))
+				v.MoveCursor(0, distance*dir, false)
+				drawJSON(g, v)
+				drawPath(g, v)
+				return nil
+			}
 		}
 		return nil
 	}
