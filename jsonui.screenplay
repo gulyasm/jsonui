@@ -1,0 +1,14 @@
+jsonui < test.json{{ sleep 1 }}
+{{ sleep 3 }}j
+{{ sleep 1 }}j
+{{ sleep 1 }}j
+{{ sleep 1 }}j
+{{ sleep 1 }}k
+{{ sleep 1 }}e
+{{ sleep 1 }}j
+{{ sleep 1 }}k
+{{ sleep 1 }}e
+{{ sleep 1 }}kk
+{{ sleep 1 }}e
+{{ sleep 1 }}e
+{{ sleep 2 }}{{ control c }}{{ sleep 2 }}
