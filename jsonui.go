@@ -87,6 +87,9 @@ func main() {
 	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding("", 'q', gocui.ModNone, quit); err != nil {
+		log.Panicln(err)
+	}
 
 	if err := g.SetKeybinding(treeView, 'k', gocui.ModNone, cursorMovement(-1)); err != nil {
 		log.Panicln(err)
@@ -145,6 +148,7 @@ K/PageUp 		═ 	Move 15 line up
 e				═ 	Toggle expend/collapse node
 E				═ 	Expand all nodes
 C				═ 	Collapse all nodes
+q/ctrl+c		═ 	Exit
 h/?				═ 	Toggle help message
 `
 
