@@ -39,3 +39,6 @@ Expand all nodes
 
 #### `C`
 Collapse all nodes
+
+#### `q/Ctrl+C`
+Quit jsonui
