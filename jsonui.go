@@ -21,62 +21,12 @@ const (
 	helpView   = "help"
 )
 
-type position struct {
-	prc    float32
-	margin int
-}
-
-func (p position) getCoordinate(max int) int {
-	// value = prc * MAX + abs
-	return int(p.prc*float32(max)) - p.margin
-}
-
-type viewPosition struct {
-	x0, y0, x1, y1 position
-}
-
 func logFile(s string) error {
 	d1 := []byte(s + "\n")
 	return ioutil.WriteFile("log.txt", d1, 0644)
 }
 
-func (vp viewPosition) getCoordinates(maxX, maxY int) (int, int, int, int) {
-	var x0 = vp.x0.getCoordinate(maxX)
-	var y0 = vp.y0.getCoordinate(maxY)
-	var x1 = vp.x1.getCoordinate(maxX)
-	var y1 = vp.y1.getCoordinate(maxY)
-	return x0, y0, x1, y1
-}
-
 var helpWindowToggle = false
-
-// x0, y0, x1, y1
-var viewPositions = map[string]viewPosition{
-	searchView: {
-		position{0.0, 0},
-		position{0.0, 0},
-		position{1.0, 1},
-		position{0.1, 1},
-	},
-	treeView: {
-		position{0.0, 0},
-		position{0.1, 0},
-		position{0.3, 1},
-		position{0.9, 2},
-	},
-	textView: {
-		position{0.3, 0},
-		position{0.1, 0},
-		position{1.0, 1},
-		position{0.9, 2},
-	},
-	pathView: {
-		position{0.0, 0},
-		position{0.89, 0},
-		position{1.0, 1},
-		position{1.0, 1},
-	},
-}
 
 var tree treeNode
 
@@ -131,10 +81,10 @@ func main() {
 	if err := g.SetKeybinding(treeView, 'E', gocui.ModNone, expandAll); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding("", 's', gocui.ModNone, focusView(searchView)); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyCtrlT, gocui.ModNone, focusView(treeView)); err != nil {
 		log.Panicln(err)
 	}
-	if err := g.SetKeybinding("", 't', gocui.ModNone, focusView(treeView)); err != nil {
+	if err := g.SetKeybinding("", gocui.KeyCtrlS, gocui.ModNone, focusView(searchView)); err != nil {
 		log.Panicln(err)
 	}
 	if err := g.SetKeybinding(treeView, 'C', gocui.ModNone, collapseAll); err != nil {
@@ -187,35 +137,45 @@ func (d *DefaultEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mo
 	}
 
 }
+
+func ratio(ratio float32, max int) int {
+	return int(float32(max) * ratio)
+}
+
 func layout(g *gocui.Gui) error {
-	var views = []string{searchView, treeView, textView, pathView}
 	maxX, maxY := g.Size()
-	for _, view := range views {
-		x0, y0, x1, y1 := viewPositions[view].getCoordinates(maxX, maxY)
-		if v, err := g.SetView(view, x0, y0, x1, y1); err != nil {
-			v.SelFgColor = gocui.ColorBlack
-			v.SelBgColor = gocui.ColorGreen
-
-			v.Title = " " + view + " "
-			if err != gocui.ErrUnknownView {
-				return err
-			}
-
-			if v.Name() == searchView {
-				v.Editor = &DefaultEditor{g}
-				v.Editable = true
-			}
-
-			if v.Name() == treeView {
-				v.Highlight = true
-				drawTree(g, v, tree)
-			}
-			if v.Name() == textView {
-				drawJSON(g, v)
-			}
-			g.Highlight = true
-
+	if v, err := g.SetView(searchView, 0, 0, ratio(0.6, maxX)-2, 2); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
 		}
+		v.SelFgColor = gocui.ColorBlack
+		v.SelBgColor = gocui.ColorGreen
+		v.Editor = &DefaultEditor{g}
+		v.Editable = true
+
+		v.Title = " " + searchView + " "
+
+	}
+	if v, err := g.SetView(treeView, 0, 3, ratio(0.6, maxX)-2, maxY-4); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Title = " " + treeView + " "
+		v.Highlight = true
+		drawTree(g, v, tree)
+	}
+	if v, err := g.SetView(pathView, 0, maxY-3, maxX-1, maxY-1); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Title = " " + pathView + " "
+	}
+	if v, err := g.SetView(textView, ratio(0.6, maxX), 0, maxX-1, maxY-4); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		v.Title = " " + textView + " "
+		drawJSON(g, v)
 	}
 	if helpWindowToggle {
 		height := strings.Count(helpMessage, "\n") + 1
@@ -234,6 +194,7 @@ func layout(g *gocui.Gui) error {
 	} else {
 		g.DeleteView(helpView)
 	}
+	g.Highlight = true
 	return nil
 
 }
