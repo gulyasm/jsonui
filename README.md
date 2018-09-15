@@ -8,6 +8,9 @@
 ## Install
 `go get -u github.com/gulyasm/jsonui`
 
+## Binary Releases
+[Binary releases are availabe](https://github.com/gulyasm/jsonui/releases)
+
 ## Usage
 Just use the standard output:
 ```
@@ -42,3 +45,8 @@ Collapse all nodes
 
 #### `q/Ctrl+C`
 Quit jsonui
+
+
+## Acknowledgments
+Special thanks for [asciimoo](https://github.com/asciimoo) and the [wuzz](https://github.com/asciimoo/wuzz) project for all the help and suggestions.  
+
