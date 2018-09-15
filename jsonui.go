@@ -11,6 +11,8 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
+const VERSION = "1.0.1"
+
 const (
 	treeView = "tree"
 	textView = "text"
