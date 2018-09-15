@@ -299,7 +299,6 @@ func (n floatNode) draw(writer io.Writer, padding, lvl int) error {
 }
 func (n floatNode) filter(query query) bool {
 	return true
-
 }
 
 type stringNode struct {
@@ -370,6 +369,39 @@ func (n boolNode) draw(writer io.Writer, padding, lvl int) error {
 func (n boolNode) filter(query query) bool {
 	return true
 }
+
+type nilNode struct {
+	baseTreeNode
+}
+
+func (n *nilNode) collapseAll() {
+}
+func (n *nilNode) expandAll() {
+}
+
+func (n nilNode) isCollapsable() bool {
+	return false
+}
+
+func (n nilNode) find(tp treePosition) treeNode {
+	return nil
+}
+
+func (n nilNode) String(_, _ int) string {
+	return "null"
+}
+
+func (n nilNode) search(query string) (treeNode, error) {
+	return nil, nil
+
+}
+func (n nilNode) draw(writer io.Writer, padding, lvl int) error {
+	return nil
+
+}
+func (n nilNode) filter(query query) bool {
+	return true
+}
 func newTree(y interface{}) (treeNode, error) {
 	var tree treeNode
 	switch v := y.(type) {
@@ -383,6 +415,10 @@ func newTree(y interface{}) (treeNode, error) {
 			baseTreeNode{true},
 			v,
 		}
+
+	case nil:
+		tree = &nilNode{baseTreeNode{true}}
+
 	case float64:
 		tree = &floatNode{
 			baseTreeNode{true},
