@@ -94,6 +94,15 @@ func (n complexNode) search(query string) (treeNode, error) {
 		map[string]treeNode{},
 	}
 	for key, value := range n.data {
+		cst, ok := value.(*complexNode)
+		if ok {
+			subTreeHit, err := cst.search(query)
+			cst2, _ := subTreeHit.(*complexNode)
+			if err == nil && len(cst2.data) > 0 {
+				filteredNode.data[key] = subTreeHit
+				continue
+			}
+		}
 		if strings.Contains(key, query) {
 			filteredNode.data[key] = value
 		}
@@ -148,6 +157,7 @@ func (n complexNode) draw(writer io.Writer, padding, lvl int) error {
 	for i, key := range keys {
 		value, _ := n.data[key]
 		var char string
+		log.Println(lvl, i)
 		if i < length-1 {
 			char = treeSignUpMiddle
 		} else {

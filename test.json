@@ -2,6 +2,9 @@
     "name": "gulyasm",
     "age": 12,
     "price": 876.2341234,
+    "fake": {
+        "zip": "H-1023"
+    },
     "address": {
         "zip": "H-1056",
         "city": "Budapest",
