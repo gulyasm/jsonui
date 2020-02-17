@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -28,6 +29,17 @@ type position struct {
 func (p position) getCoordinate(max int) int {
 	// value = prc * MAX + abs
 	return int(p.prc*float32(max)) - p.margin
+}
+
+type cmdLineArgs struct {
+	linejson bool
+}
+
+func parseArgs() cmdLineArgs {
+	var args cmdLineArgs
+	flag.BoolVar(&args.linejson, "line", false, "to read a linejson file")
+	flag.Parse()
+	return args
 }
 
 type viewPosition struct {
@@ -74,7 +86,8 @@ var tree treeNode
 
 func main() {
 	var err error
-	tree, err = fromReader(os.Stdin)
+	args := parseArgs()
+	tree, err = fromReader(os.Stdin, args.linejson)
 	if err != nil {
 		log.Panicln(err)
 	}

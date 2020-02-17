@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -467,10 +468,33 @@ func fromBytes(b []byte) (treeNode, error) {
 	return newTree(y)
 }
 
-func fromReader(r io.Reader) (treeNode, error) {
-	b, err := ioutil.ReadAll(os.Stdin)
-	if err != nil {
-		return nil, err
+func fromReader(r io.Reader, linejson bool) (treeNode, error) {
+	var rootNode treeNode = nil
+	var err error = nil
+	if linejson {
+		rd := bufio.NewReader(os.Stdin)
+		rootList := []treeNode{}
+		for {
+			line, err := rd.ReadBytes('\n')
+			if err != nil {
+				break
+			}
+			lineTree, err := fromBytes(line)
+			if err != nil {
+				return nil, err
+			}
+			rootList = append(rootList, lineTree)
+		}
+		rootNode = &listNode{
+			baseTreeNode{true},
+			rootList,
+		}
+	} else {
+		b, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return nil, err
+		}
+		rootNode, err = fromBytes(b)
 	}
-	return fromBytes(b)
+	return rootNode, err
 }
