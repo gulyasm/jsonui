@@ -1,7 +1,7 @@
 default: build
 
 installdep:
-	@go get github.com/golang/lint/golint
+	@go get golang.org/x/lint/golint
 	@go get
 
 build: installdep
