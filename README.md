@@ -5,10 +5,36 @@
 
 ![](img/jsonui.gif)
 
+## Import into your application
+jsonui can now be imported into your application --
+```bigquery
+jsonBytes,err := ioutil.ReadFile("jsonfile.json")
+errorhandle(err)
+jsonui.Interactive(jsonBytes)
+```
+
+When it runs, scroll down to the section, press x to execute. The output will look like this:
+```
+] $ cat test.json | jsonui
+JSON Path: address.gateways
+```
+And then the user will be able to extract json using another utility called 'jj'
+```bigquery
+]$ cat test.json | jj address.gateways
+["Sopron", "Vienna", "Budapest"]
+```
 ## Install
+This Version:
+`go get -u github.com/rmasci/jsonui`
+
+Original:
 `go get -u github.com/gulyasm/jsonui`
 
 ## Binary Releases
+This Version:
+[Binary releases are availabe](https://github.com/rmasci/jsonui/releases)
+
+Original:
 [Binary releases are availabe](https://github.com/gulyasm/jsonui/releases)
 
 ## Usage
@@ -42,9 +68,12 @@ Expand all nodes
 
 #### `C`
 Collapse all nodes
-
+### `x`
+Execute. Will give you the JSON Path to use with jj command.
+[https://github.com/tidwall/jj](https://github.com/tidwall/jj)
 #### `q/Ctrl+C`
 Quit jsonui
+
 
 
 ## Acknowledgments
