@@ -73,7 +73,7 @@ var viewPositions = map[string]viewPosition{
 }
 
 var tree treeNode
-
+// Very simple to use, just call jsonui.Interactive([]jsonbytes) and you enter in to interactive mode. The return is the location the user selected. From here the user can then use gjson to pull the value, display it to the user, or use it for other purposes.
 func Interactive(jsonBod []byte) (jp string) {
 	jp = startInteract(jsonBod)
 
