@@ -6,7 +6,8 @@
 ![](img/jsonui.gif)
 
 ## Install
-`go get -u github.com/gulyasm/jsonui`
+`go install github.com/gulyasm/jsonui@latest`
+Binary will be installed into `${GOPATH}/bin`, where `GOPATH` defaults to `~/go`. Make sure the bin directory is in your `$PATH`.
 
 ## Binary Releases
 [Binary releases are availabe](https://github.com/gulyasm/jsonui/releases)

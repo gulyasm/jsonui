@@ -120,6 +120,9 @@ func main() {
 	if err := g.SetKeybinding(treeView, 'e', gocui.ModNone, toggleExpand); err != nil {
 		log.Panicln(err)
 	}
+	if err := g.SetKeybinding(treeView, 'c', gocui.ModNone, toggleExpand); err != nil {
+		log.Panicln(err)
+	}
 	if err := g.SetKeybinding(treeView, 'E', gocui.ModNone, expandAll); err != nil {
 		log.Panicln(err)
 	}
@@ -147,7 +150,8 @@ j/ArrowDown		═ 	Move a line down
 k/ArrowUp 		═ 	Move a line up
 J/PageDown		═ 	Move 15 line down
 K/PageUp 		═ 	Move 15 line up
-e				═ 	Toggle expend/collapse node
+e				═ 	Toggle expand/collapse node
+c				═ 	Toggle expand/collapse node
 E				═ 	Expand all nodes
 C				═ 	Collapse all nodes
 q/ctrl+c		═ 	Exit
